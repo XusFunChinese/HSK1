@@ -1,237 +1,377 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HSK 1 Reading Logic 100 - XUSFUNCHINESE</title>
+    <title>HSK 1 Reading Master - XUSFUNCHINESE</title>
     <style>
         :root {
-            --primary: #01579b; --gold: #fbc02d; --pinyin-red: #d63031;
+            --primary: #01579b; --gold: #fbc02d; --pinyin-red: #ff4757; 
             --night-sky: radial-gradient(circle at center, #001f3f 0%, #000510 100%);
             --glass: rgba(255, 255, 255, 0.15);
         }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: "Arial Black", sans-serif; overflow: hidden; background: var(--night-sky); color: white; }
         
-        ruby { ruby-align: center; }
-        rt { font-family: Arial, sans-serif; font-size: 0.45em; color: var(--gold); font-weight: normal; margin-bottom: 2px; }
-
-        #cover-page { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--night-sky); z-index: 5000; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 0.8s; text-align: center; }
-        .cover-title { font-size: 32px; color: var(--gold); margin-bottom: 10px; text-shadow: 0 0 15px rgba(251,192,45,0.5); }
-        .mode-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 0 15px; width: 95%; max-width: 500px; }
-        .mode-btn { padding: 12px; background: transparent; border: 2px solid var(--gold); color: white; border-radius: 12px; cursor: pointer; transition: 0.3s; display: flex; flex-direction: column; align-items: center; }
-        .mode-btn b { font-size: 14px; margin-bottom: 4px; }
-        .mode-btn span { font-size: 11px; opacity: 0.8; font-family: sans-serif; }
+        /* 封面页 */
+        #cover-page { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--night-sky); z-index: 5000; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 0.8s; }
+        .cover-title { font-size: 50px; color: var(--gold); text-shadow: 0 0 20px rgba(251,192,45,0.6); margin: 0; text-align: center; }
+        .mode-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 20px; }
+        .mode-btn { padding: 15px 25px; background: transparent; border: 2px solid var(--gold); color: white; border-radius: 15px; cursor: pointer; transition: 0.3s; font-size: 16px; display: flex; flex-direction: column; align-items: center; min-width: 160px; }
         .mode-btn:hover { background: var(--gold); color: #000; }
-        
-        #app { display: none; height: 100vh; flex-direction: column; padding: 10px; box-sizing: border-box; }
+
+        /* 主界面 */
+        #app { display: none; height: 100vh; flex-direction: column; padding: 15px; box-sizing: border-box; }
         .nav-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .progress-bar { flex-grow: 1; height: 8px; background: rgba(255,255,255,0.2); margin: 0 10px; border-radius: 4px; overflow: hidden; }
+        .btn-icon { background: var(--glass); border: 1px solid white; color: white; padding: 8px 15px; border-radius: 10px; cursor: pointer; }
+        .progress-bar { flex-grow: 1; height: 10px; background: rgba(255,255,255,0.2); margin: 0 15px; border-radius: 5px; overflow: hidden; }
         #progress-fill { height: 100%; width: 0%; background: var(--gold); transition: 0.3s; }
         
-        .content-card { background: var(--glass); backdrop-filter: blur(20px); border-radius: 20px; flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; border: 1px solid rgba(255,255,255,0.1); text-align: center; }
-        #reading-text { font-size: 22px; line-height: 2.6; margin-bottom: 20px; max-width: 95%; }
-        #sub-text { font-size: 20px; line-height: 2.6; color: #fff; margin-top: 15px; border-top: 2px dashed rgba(255,255,255,0.2); padding-top: 15px; width: 85%; }
+        .content-card { background: var(--glass); backdrop-filter: blur(15px); border-radius: 25px; flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; border: 1px solid rgba(255,255,255,0.1); }
         
-        .option-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; width: 100%; max-width: 600px; margin-top: 10px; }
-        .opt-item { background: white; color: #001f3f; padding: 15px; border-radius: 15px; font-size: 18px; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-        .opt-img { font-size: 45px; }
+        /* 拼音对齐与横排样式 */
+        ruby { ruby-align: center; display: inline-flex; flex-direction: column-reverse; vertical-align: bottom; margin: 0 1px; }
+        rt { display: block; font-family: "Arial", sans-serif; font-size: 0.4em; color: var(--pinyin-red); font-weight: bold; line-height: 1; margin-bottom: 2px; text-align: center; }
+        
+        #reading-text { font-size: 32px; color: white; margin-bottom: 30px; text-align: center; line-height: 1.8; padding: 0 10px; font-family: "Microsoft YaHei", sans-serif; white-space: normal; word-break: break-all; }
+        
+        /* 选项横排布局 */
+        .option-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; width: 100%; max-width: 650px; }
+        .opt-item { background: white; color: #001f3f; padding: 15px 10px; border-radius: 15px; text-align: center; font-size: 18px; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.2); border: 2px solid transparent; display: flex; flex-direction: row; align-items: flex-end; justify-content: center; flex-wrap: wrap; }
+        .opt-item:active { transform: scale(0.95); }
+        .opt-img { font-size: 50px; display: block; width: 100%; }
 
+        /* 遮罩层 */
         .overlay-view { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #001122; z-index: 6000; display: none; padding: 20px; box-sizing: border-box; }
-        .scroll-area { height: 85%; overflow-y: auto; margin-top: 15px; }
-        .list-item { padding: 15px; border-bottom: 1px solid #333; color: white; cursor: pointer; line-height: 1.8; }
-        .list-item:active { background: #01579b; }
-
-        #summary-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--night-sky); z-index: 8000; display: none; flex-direction: column; justify-content: center; align-items: center; }
+        .scroll-area { height: calc(100% - 120px); overflow-y: auto; margin-top: 15px; }
+        .list-card { background: rgba(255,255,255,0.08); padding: 15px; border-radius: 12px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+        
+        /* 结算页 */
+        #summary-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--night-sky); z-index: 8000; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+        .score-circle { width: 180px; height: 180px; border: 6px solid var(--gold); border-radius: 50%; display: flex; flex-direction: column; justify-content: center; align-items: center; margin-bottom: 30px; }
+        .footer-nav { display: flex; gap: 20px; margin-top: 20px; width: 100%; max-width: 600px; }
+        .nav-arrow { flex: 1; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid white; color: white; border-radius: 10px; cursor: pointer; }
         #feedback-pop { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 120px; display: none; z-index: 9000; pointer-events: none; }
     </style>
 </head>
 <body>
 
 <div id="cover-page">
-    <div style="font-size: 50px; margin-bottom: 10px;">🏮</div>
-    <h1 class="cover-title">HSK 1 READING 100<br><small style="font-size:16px; opacity:0.8; font-family:sans-serif;">Full Reading Modules with Pinyin</small></h1>
+    <div style="font-size: 80px;">📖</div>
+    <h1 class="cover-title">HSK 1 READING<br><small style="font-size:20px; opacity:0.8;">阅读练习</small></h1>
     <div class="mode-grid">
-        <button class="mode-btn" onclick="startApp(0)">
-            <b>Part 1: Vocabulary</b>
-            <span>Word-Image matching</span>
-        </button>
-        <button class="mode-btn" onclick="startApp(20)">
-            <b>Part 2: Sentences</b>
-            <span>Match sentences to pictures</span>
-        </button>
-        <button class="mode-btn" onclick="startApp(40)">
-            <b>Part 3: Dialogues</b>
-            <span>Conversation pairing</span>
-        </button>
-        <button class="mode-btn" onclick="startApp(60)">
-            <b>Part 4: Cloze</b>
-            <span>Fill in the missing words</span>
-        </button>
-        <button class="mode-btn" onclick="startApp(80)" style="grid-column: span 2; border-color: #4cd137;">
-            <b>Part 5: Logic Reasoning</b>
-            <span>Deep reading comprehension</span>
-        </button>
+        <button class="mode-btn" onclick="startApp(0)"><b>Part 1</b><small>Judgement</small></button>
+        <button class="mode-btn" onclick="startApp(20)"><b>Part 2</b><small>Sentence-Image</small></button>
+        <button class="mode-btn" onclick="startApp(40)"><b>Part 3</b><small>Matching</small></button>
+        <button class="mode-btn" onclick="startApp(60)"><b>Part 4</b><small>Fill Blanks</small></button>
     </div>
-    <button class="mode-btn" style="margin-top:15px; width: 220px; border-color: #fff;" onclick="toggleOverlay('mistake-view', true)">
-        <b>Mistake Book</b>
-        <span>Review failed questions</span>
-    </button>
+    <button class="mode-btn" style="margin-top:20px; width: 220px; border-color: #fff;" onclick="toggleOverlay('mistake-view', true)">📖 Mistake Book</button>
 </div>
 
 <div id="summary-screen">
-    <h1 style="color:var(--gold); font-size: 40px;">WELL DONE!</h1>
-    <div id="final-score" style="font-size: 80px; color: var(--gold); margin: 20px 0;">0</div>
-    <button class="mode-btn" onclick="location.reload()" style="width: 200px;">Back to Menu</button>
+    <h1 id="sum-title" style="color:var(--gold)">READING COMPLETE!</h1>
+    <div class="score-circle">
+        <div style="font-size: 18px;">FINAL SCORE</div>
+        <div class="score-num" id="final-score" style="font-size: 60px; color: var(--gold);">0</div>
+    </div>
+    <div id="praise-text" style="font-size: 24px; margin-bottom: 30px; padding: 0 20px;"></div>
+    <button class="mode-btn" onclick="location.reload()" style="width: 250px;">Return to Menu</button>
 </div>
 
 <div id="app">
     <div class="nav-header">
-        <button onclick="exitToCover()" style="background:none; border:1px solid white; color:white; border-radius:8px; padding: 5px 12px; cursor:pointer;">🏠</button>
+        <button class="btn-icon" onclick="exitToCover()">🏠 Home</button>
         <div class="progress-bar"><div id="progress-fill"></div></div>
-        <button onclick="toggleOverlay('list-view', true)" style="background:none; border:1px solid white; color:white; border-radius:8px; padding: 5px 12px; cursor:pointer;">📜</button>
+        <button class="btn-icon" onclick="toggleOverlay('list-view', true)">📜 List</button>
     </div>
     <div class="content-card">
-        <div id="q-mode" style="background:var(--pinyin-red); color:white; padding:2px 10px; border-radius:5px; font-size:12px; margin-bottom:10px; display:none; font-weight:bold;">REVIEWING MISTAKES</div>
-        <div id="q-info" style="color: var(--gold); font-size: 14px; margin-bottom: 10px;">PART</div>
+        <div id="q-mode" style="background:var(--gold); color:black; padding:2px 10px; border-radius:5px; font-size:12px; margin-bottom:10px; display:none;">MISTAKE MODE</div>
+        <div id="q-info" style="color: var(--gold); margin-bottom: 10px;">QUESTION 1/20</div>
+        
         <div id="reading-text"></div>
-        <div id="sub-text"></div>
-        <div id="visual-content" style="font-size: 100px; margin-bottom: 10px;"></div>
+        
+        <div id="visual-content" style="font-size: 100px; margin-bottom: 20px; line-height: 1;"></div>
+        
         <div class="option-container" id="options-grid"></div>
+        
+        <div class="footer-nav">
+            <button class="nav-arrow" onclick="prevQuestion()">← PREV</button>
+            <button class="nav-arrow" onclick="nextQuestion()">NEXT →</button>
+        </div>
     </div>
 </div>
 
-<div id="list-view" class="overlay-view">
-    <h2 style="color:var(--gold)">Question List (Full Content)</h2>
-    <div class="scroll-area" id="list-content"></div>
-    <button class="mode-btn" style="width:100%; margin-top:10px;" onclick="toggleOverlay('list-view', false)">Back</button>
-</div>
-
-<div id="mistake-view" class="overlay-view">
-    <h2 style="color:var(--pinyin-red)">Mistake Book</h2>
-    <div class="scroll-area" id="mistake-content"></div>
-    <button class="mode-btn" style="width:100%; margin-top:10px;" onclick="toggleOverlay('mistake-view', false)">Close</button>
-</div>
-
+<div id="list-view" class="overlay-view"><h2 style="color:var(--gold)">📜 Question List</h2><div class="scroll-area" id="list-content"></div><button class="mode-btn" style="width:100%; margin-top:15px;" onclick="toggleOverlay('list-view', false)">Back</button></div>
+<div id="mistake-view" class="overlay-view"><h2 style="color:var(--pinyin-red)">📖 Mistake Book</h2><div class="scroll-area" id="mistake-content"></div><button class="mode-btn" style="width:100%; margin-top:15px;" onclick="toggleOverlay('mistake-view', false)">Close</button></div>
 <div id="feedback-pop"></div>
 
 <script>
-const pyMap = {"我":"wǒ","你":"nǐ","他":"tā","她":"tā","们":"men","好":"hǎo","是":"shì","不":"bù","有":"yǒu","在":"zài","个":"gè","这":"zhè","那":"nà","哪":"nǎ","谁":"shéi","什":"shén","么":"me","几":"jǐ","岁":"suì","叫":"jiào","名":"míng","字":"zi","喝":"hē","茶":"chá","吃":"chī","米":"mǐ","饭":"fàn","水":"shuǐ","果":"guǒ","苹":"píng","老":"lǎo","师":"shī","学":"xué","生":"shēng","同":"tóng","校":"xiào","医":"yī","院":"yuàn","商":"shāng","店":"diàn","馆":"guǎn","电":"diàn","视":"shì","影":"yǐng","脑":"nǎo","书":"shū","衣":"yī","服":"fú","杯":"bēi","子":"zi","钱":"qián","块":"kuài","飞":"fēi","机":"jī","出":"chū","租":"zū","车":"chē","坐":"zuò","买":"mǎi","看":"kàn","听":"tīng","说":"shuō","读":"dú","写":"xiě","开":"kāi","回":"huí","来":"lái","去":"qù","想":"xiǎng","能":"néng","会":"huì","请":"qǐng","谢":"xiè","客":"kè","气":"qi","对":"duì","起":"qǐ","没":"méi","关":"guān","系":"xi","再":"zài","见":"jiàn","很":"hěn","太":"tài","多":"duō","少":"shǎo","大":"dà","小":"xiǎo","冷":"lěng","热":"rè","昨":"zuó","天":"tiān","今":"jīn","明":"míng","年":"nián","月":"yuè","日":"rì","号":"hào","星":"xīng","期":"qī","点":"diǎn","分":"fēn","钟":"zhōng","现":"xiàn","里":"lǐ","上":"shàng","下":"xià","前":"qián","后":"hòu","中":"zhōng","国":"guó","北":"běi","京":"jīng","雨":"yǔ","和":"hé","呢":"ne","吗":"ma","吧":"ba","识":"shí","认":"rèn","做":"zuò","猫":"māo","狗":"gǒu","漂亮":"piào liang","汉语":"hàn yǔ","喜欢":"xǐ huan","谢谢":"xiè xie","认识":"rèn shi","医生":"yī shēng","老师":"lǎo shī","同学":"tóng xué","学生":"xué sheng","北京":"běi jīng","苹果":"píng guǒ","喝茶":"hē chá","回家":"huí jiā","看书":"kàn shū","说话":"shuō huà","写字":"xiě zì","天气":"tiān qì","现在":"xiàn zài","多少":"duō shao","再见":"zài jiàn","对不起":"duì bu qǐ","没关系":"méi guān xi","不客气":"bù kè qi","椅子":"yǐ zi","桌子":"zhuō zi","电视":"diàn shì","电脑":"diàn nǎo","电影":"diàn yǐng","女儿":"nǚ ér","朋友":"péng you","高兴":"gāo xìng","西瓜":"xī guā","工作":"gōng zuò","身体":"shēn tǐ","没去":"méi qù","明天":"míng tiān","美国":"měi guó","每天":"měi tiān","好看":"hǎo kàn"};
+// 拼音数据库：每个词/句对应空格分隔的拼音序列
+const pinyinMap = {
+    "医生":"yī shēng", "苹果":"píng guǒ", "喝茶":"hē chá", "看书":"kàn shū", "小猫":"xiǎo māo",
+    "电脑":"diàn nǎo", "飞机":"fēijī", "出租车":"chū zū chē", "衣服":"yī fu", "下雨":"xià yǔ",
+    "老师":"lǎo shī", "学生":"xué sheng", "桌子":"zhuō zi", "水果":"shuǐ guǒ", "椅子":"yǐ zi",
+    "商店":"shāng diàn", "饭店":"fàn diàn", "学校":"xué xiào", "医院":"yī yuàn", "电影":"diàn yǐng",
+    "他在书店看书。":"tā zài shū diàn kàn shū 。", "我想吃一个苹果。":"wǒ xiǎng chī yī gè píng guǒ 。",
+    "外面下雨了。":"wài miàn xià yǔ le 。", "我坐飞机去北京。":"wǒ zuò fēi jī qù Běi jīng 。",
+    "李老师在学校。":"Lǐ lǎo shī zài xué xiào 。", "她有一只小猫。":"tā yǒu yī zhī xiǎo māo 。",
+    "我想喝一点儿茶。":"wǒ xiǎng hē yī diǎnr chá 。", "他在桌子下面。":"tā zài zhuō zi xià miàn 。",
+    "我去商店买衣服。":"wǒ qù shāng diàn mǎi yī fu 。", "她在医院工作。":"tā zài yī yuàn gōng zuò 。",
+    "请坐在椅子上。":"qǐng zuò zài yǐ zi shàng 。", "今天有大雨。":"jīn tiān yǒu dà yǔ 。",
+    "这是我的电脑。":"zhè shì wǒ de diàn nǎo 。", "我想看电影。":"wǒ xiǎng kàn diàn yǐng 。",
+    "饭店里有很多人。":"fàn diàn lǐ yǒu hěn duō rén 。", "他在打出租车。":"tā zài dǎ chū zū chē 。",
+    "这个水果很好吃。":"zhè gè shuǐ guǒ hěn hǎo chī 。", "她是我的学生。":"tā shì wǒ de xué sheng 。",
+    "去看医生吧。":"qù kàn yī shēng ba 。", "学校很大。":"xué xiào hěn dà 。",
+    "你好，很高兴认识你。":"nǐ hǎo ， hěn gāo xìng rèn shi nǐ 。", "我也很高兴认识你。":"wǒ yě hěn gāo xìng rèn shi nǐ 。",
+    "谢谢你。":"xiè xie nǐ 。", "不客气。":"bú kè qi 。", "再见，明天见。":"zài jiàn ， míng tiān jiàn 。",
+    "明天见。":"míng tiān jiàn 。", "这个杯子多少钱？":"zhè gè bēi zi duō shao qián ？",
+    "二十块钱。":"èr shí kuài qián 。", "今天星期几？":"jīn tiān xīng qī jǐ ？", "今天星期三。":"jīn tiān xīng qī sān 。",
+    "你叫什么名字？":"nǐ jiào shén me míng zi ？", "我叫王小明。":"wǒ jiào Wáng Xiǎo míng 。",
+    "你在做什么呢？":"nǐ zài zuò shén me ne ？", "我在看电视呢。":"wǒ zài kàn diàn shì ne 。",
+    "你会说汉语吗？":"nǐ huì shuō Hàn yǔ ma ？", "我会说一点儿。":"wǒ huì shuō yī diǎnr 。",
+    "现在几点了？":"xiàn zài jǐ diǎn le ？", "下午三点半。":"xià wǔ sān diǎn bàn 。",
+    "你在哪儿？":"nǐ zài nǎr ？", "我在商店里。":"wǒ zài shāng diàn lǐ 。",
+    "那是你的猫吗？":"nà shì nǐ de māo ma ？", "是的，那是我的。":"shì de ， nà shì wǒ de 。",
+    "天气怎么样？":"tiān qì zěn me yàng ？", "太热了。":"tài rè le 。",
+    "你是哪国人？":"nǐ shì nǎ guó rén ？", "我是中国人。":"wǒ shì Zhōng guó rén 。",
+    "他多大了？":"tā duō dà le ？", "他五岁了。":"tā wǔ suì le 。",
+    "你要喝点儿水吗？":"nǐ yào hē diǎnr shuǐ ma ？", "好的，谢谢。":"hǎo de ， xiè xie 。",
+    "谁在房间里？":"shéi zài fáng jiān lǐ ？", "是我的老师。":"shì wǒ de lǎo shī 。",
+    "你会做饭吗？":"nǐ huì zuò fàn ma ？", "我不会。":"wǒ bú huì 。",
+    "北京大吗？":"Běi jīng dà ma ？", "北京很大。":"Běi jīng hěn dà 。",
+    "你想去哪儿？":"nǐ xiǎng qù nǎr ？", "我想去饭店。":"wǒ xiǎng qù fàn diàn 。",
+    "你会写汉字吗？":"nǐ huì xiě hàn zì ma ？", "我会写。":"wǒ huì xiě 。",
+    "我坐____去北京。":"wǒ zuò ____ qù Běi jīng 。", "你想____什么？":"nǐ xiǎng ____ shén me ？",
+    "他是我的____。":"tā shì wǒ de ____ 。", "外面____了，别出去。":"wài miàn ____ le ， bié chū qù 。",
+    "现在____点钟？":"xiàn zài ____ diǎn zhōng ？", "我会说____汉语。":"wǒ huì shuō ____ Hàn yǔ 。",
+    "请坐，请____茶。":"qǐng zuò ， qǐng ____ chá 。", "这个杯子三十____。":"zhè gè bēi zi sān shí ____ 。",
+    "他在____工作。":"tā zài ____ gōng zuò 。", "那个字怎么____？":"nà gè zì zěn me ____ ？",
+    "我不____他。":"wǒ bù ____ tā 。", "明天有____。":"míng tiān yǒu ____ 。",
+    "桌子____有一本书。":"zhuō zi ____ yǒu yī běn shū 。", "你____岁了？":"nǐ ____ suì le ？",
+    "我想去____买东西。":"wǒ xiǎng qù ____ mǎi dōng xi 。", "那个衣服太____了。":"nà gè yī fu tài ____ le 。",
+    "你____什么名字？":"nǐ ____ shén me míng zi ？", "爸爸在____呢。":"bà ba zài ____ ne 。",
+    "你会____汉语吗？":"nǐ huì ____ Hàn yǔ ma ？", "很高兴____你。":"hěn gāo xìng ____ nǐ 。",
+    "飞机":"fēi jī", "电脑":"diàn nǎo", "桌子":"zhuō zi", "苹果":"píng guǒ", "喝":"hē", "看":"kàn", "说":"shuō", "去":"qù",
+    "老师":"lǎo shī", "天气":"tiān qì", "椅子":"yǐ zi", "名字":"míng zi", "下雨":"xià yǔ", "说话":"shuō huà", "看书":"kàn shū", "睡觉":"shuì jiào",
+    "几":"jǐ", "多":"duō", "什么":"shén me", "哪儿":"nǎr", "一点儿":"yī diǎnr", "一些":"yī xiē", "几个":"jǐ gè", "多少":"duō shao",
+    "买":"mǎi", "叫":"jiào", "块":"kuài", "月":"yuè", "号":"hào", "年":"nián", "医院":"yī yuàn", "读":"dú", "听":"tīng",
+    "认识":"rèn shi", "漂亮":"piào liang", "对不起":"duì bù qǐ", "没关系":"méi guān xi", "电影":"diàn yǐng", "再见":"zài jiàn", "谢谢":"xiè xie",
+    "上":"shàng", "后":"hòu", "前":"qián", "里":"lǐ", "那":"nà", "商店":"shāng diàn", "医生":"yī shēng", "会":"huì", "写":"xiě", "想":"xiǎng", "分钟":"fēn zhōng", "钱":"qián", "不客气":"bú kè qi", "很漂亮":"hěn piào liang", "没去医院":"méi qù yī yuàn"
+};
 
-function toRuby(str) {
-    if(!str) return "";
-    let res = ""; let i = 0;
-    while(i < str.length) {
-        let match = false;
-        for(let l=4; l>=2; l--) {
-            let sub = str.substr(i, l);
-            if(pyMap[sub]) {
-                let pys = pyMap[sub].split(' ');
-                for(let j=0; j<sub.length; j++) res += `<ruby>${sub[j]}<rt>${pys[j]||''}</rt></ruby>`;
-                i += l; match = true; break;
-            }
-        }
-        if(!match) {
-            let char = str[i];
-            res += pyMap[char] ? `<ruby>${char}<rt>${pyMap[char]}</rt></ruby>` : char;
-            i++;
-        }
-    }
-    return res;
-}
+const vocab = [
+    {c:"医生", e:"👨‍⚕️"}, {c:"苹果", e:"🍎"}, {c:"喝茶", e:"☕"}, {c:"看书", e:"📖"}, {c:"小猫", e:"🐱"}, 
+    {c:"电脑", e:"💻"}, {c:"飞机", e:"✈️"}, {c:"出租车", e:"🚕"}, {c:"衣服", e:"👕"}, {c:"下雨", e:"🌧️"},
+    {c:"老师", e:"👩‍🏫"}, {c:"学生", e:"🧒"}, {c:"桌子", e:"🪑"}, {c:"水果", e:"🍇"}, {c:"椅子", e:"💺"},
+    {c:"商店", e:"🏪"}, {c:"饭店", e:"🍱"}, {c:"学校", e:"🏫"}, {c:"医院", e:"🏥"}, {c:"电影", e:"🎬"}
+];
 
 const questions = [];
-let currentIdx = 0, partScores = [0,0,0,0,0], isMistakeMode = false;
-let mistakes = JSON.parse(localStorage.getItem('hsk1_r100_final_v12') || '[]');
+let currentIdx = 0;
+let partScores = [0, 0, 0, 0];
+let mistakes = JSON.parse(localStorage.getItem('hsk1_reading_err') || '[]');
+let isMistakeMode = false;
 
-function buildData() {
-    const v = [{c:"医生",e:"👨‍⚕️"},{c:"苹果",e:"🍎"},{c:"喝茶",e:"☕"},{c:"看书",e:"📖"},{c:"小猫",e:"🐱"},{c:"电脑",e:"💻"},{c:"飞机",e:"✈️"},{c:"出租车",e:"🚕"},{c:"衣服",e:"👕"},{c:"下雨",e:"🌧️"},{c:"老师",e:"👩‍🏫"},{c:"学生",e:"🧒"},{c:"桌子",e:"🪑"},{c:"水果",e:"🍇"},{c:"椅子",e:"💺"},{c:"商店",e:"🏪"},{c:"饭店",e:"🍱"},{c:"学校",e:"🏫"},{c:"医院",e:"🏥"},{c:"电影",e:"🎬"}];
-    v.forEach((it, i) => { let isT = Math.random()>0.5; questions.push({id:i, type:1, text:it.c, visual:isT?it.e:v[(i+3)%20].e, answer:isT, title:"Part 1: Match"}); });
-    const p2s = ["她在喝茶。","他在看电影。","我想买苹果。","我会写汉字。","他在商店。","那是老师。","衣服很漂亮。","外面下雨了。","坐出租车。","在饭店吃饭。","那是电脑。","学校有人。","在桌子下。","想吃水果。","去北京。","他在看书。","医生在医院。","坐在椅子上。","坐飞机。","小猫睡觉。"];
-    const p2e = ["☕","🎬","🍎","✍️","🏪","👩‍🏫","👕","🌧️","🚕","🍱","💻","🏫","🪑","🍇","🏙️","📖","👨‍⚕️","💺","✈️","🐱"];
-    p2s.forEach((s,i)=>{ let opts=[p2e[i],"🏠","🥤","🚲"].sort(()=>Math.random()-0.5); questions.push({id:i+20, type:2, text:s, options:opts, answer:opts.indexOf(p2e[i]), title:"Part 2: Select"}); });
-    const p3q = ["谢谢你。","再见。","你叫什么？","你是哪国人？","会说汉语吗？","几点了？","多少钱？","你在哪儿？","天气怎么样？","他多大了？","想喝什么？","谁是老师？","这个字怎么读？","北京漂亮吗？","有猫吗？","在做什么？","认识他吗？","星期几？","在哪儿工作？","你好吗？"];
-    const p3a = ["不客气。","明天见。","我叫大卫。","我是美国人。","会说一点儿。","三点钟。","十块钱。","在学校。","太热了。","二十岁。","想喝水。","王老师。","不认识。","很漂亮。","有一只。","在睡觉。","不认识。","星期五。","在医院。","我很好。"];
-    p3q.forEach((q,i)=>{ let opts=[p3a[i],"没关系。","没去。","在上面。"].sort(()=>Math.random()-0.5); questions.push({id:i+40, type:3, text:q, options:opts, answer:opts.indexOf(p3a[i]), title:"Part 3: Pairing"}); });
-    const p4d = [["坐____去北京。","飞机"],["说____吗？","汉语"],["今天____好。","天气"],["请____茶。","喝"],["____钱？","多少"],["在____工作。","医院"],["桌子____。","上"],["____电视。","看"],["不____他。","认识"],["很高兴____你。","认识"],["去____买东西。","商店"],["____点钟？","几"],["我的____。","名字"],["下____了。","雨"],["他二十____。","岁"],["那是____？","谁"],["你在做____？","呢"],["她是我____。","女儿"],["衣服____。","漂亮"],["谢谢____。","你"]];
-    p4d.forEach((d,i)=>{ let opts=[d[1],"电脑","水果","椅子"].sort(()=>Math.random()-0.5); questions.push({id:i+60, type:4, text:d[0], options:opts, answer:opts.indexOf(d[1]), title:"Part 4: Blanks"}); });
+// 核心：横排对齐转换函数
+function toRuby(text) {
+    if (!text) return "";
+    const pyStr = pinyinMap[text];
+    if (!pyStr) return text;
+
+    const chars = text.split('');
+    const pyArray = pyStr.split(' ');
     
-    const p5d = [
-        {t:"他是我的好朋友，他在医院工作。他是一位医生，每天都很忙。我很喜欢他。", q:"我的朋友每天都很忙。", a:true},
-        {t:"我不喜欢喝茶，我喜欢喝冷水。今天天气很热，我想买一个大西瓜。", q:"他口渴了，想喝茶。", a:false},
-        {t:"北京今天下大雨了，天气很冷。我没去商店买衣服，我在家看电视。", q:"他今天没出门。", a:true},
-        {t:"那个商店的杯子很漂亮，一个杯子九块钱，我想买两个送给同学。", q:"他要花十八块钱。", a:true},
-        {t:"王老师有五个学生，现在他们在学校看书，没在外面写字。", q:"学生们不在学校。", a:false},
-        {t:"我家有一只小猫，它叫小花。它今年三岁了，非常漂亮，很听话。", q:"小花是猫的名字。", a:true},
-        {t:"下午四点，我和同学去饭店吃饭。我们想吃米饭和一些中国菜。", q:"他们在吃美国菜。", a:false},
-        {t:"今天星期日，我没去工作。下午我去学校看女儿，她在那儿读汉语书。", q:"他女儿在学习。", a:true},
-        {t:"这个电影叫《你好》，很好看。我看过很多次，我的朋友也说很好看。", q:"他第一次看这部电影。", a:false},
-        {t:"我会说一点儿汉语，但不会写汉字。明天我想去学校学习怎么写字。", q:"他想学习写汉字。", a:true},
-        {t:"桌子上有一个电脑和几本书，那是大卫的。他在北京学习汉语，是个好学生。", q:"桌子是大卫的。", a:false},
-        {t:"我没坐出租车，我明天坐飞机去北京。北京是一个大城市，那儿有很多好商店。", q:"他现在在北京。", a:false},
-        {t:"她是我的汉语老师，她今年三十岁了。她去过很多国家，认识很多学生。", q:"老师认识很多人。", a:true},
-        {t:"昨天是星期五，明天是星期日。今天我有时间，我想去电影院看电影。", q:"昨天他去看电影了。", a:false},
-        {t:"这个苹果很大，也很红。我很喜欢吃水果，医生说多吃水果对身体好。", q:"吃水果对他好。", a:true},
-        {t:"他在房间里看书，没出来喝茶。他想在下个星期前读完这本厚厚的小说。", q:"他在外面喝茶。", a:false},
-        {t:"那是王先生的衣服，是在北京买的。那件衣服很贵，但是他非常喜欢。", q:"衣服很便宜。", a:false},
-        {t:"我家在北京饭店后面，那儿有很多小商店。每天有很多学生在那儿买水。", q:"学生在商店买东西。", a:true},
-        {t:"请坐在椅子上，喝杯热水。天气冷了，你要多穿一点儿衣服，别生病。", q:"现在天气很热。", a:false},
-        {t:"他在打电话，他在和妈妈说话。他说明天回京，想吃妈妈做的米饭。", q:"他在和妈妈吃饭。", a:false}
-    ];
-    p5d.forEach((d,i)=>questions.push({id:i+80, type:5, text:d.t, sub:d.q, answer:d.a, title:"Part 5: Logic"}));
+    let result = "";
+    let pyIdx = 0;
+    
+    for (let char of chars) {
+        if (/[\u4e00-\u9fa5]/.test(char) || (char === "_" && pyArray[pyIdx] === "____")) {
+            let p = pyArray[pyIdx] || "";
+            result += `<ruby>${char}<rt>${p}</rt></ruby>`;
+            pyIdx++;
+        } else if (char === " ") {
+            result += " ";
+        } else if (char === "_") {
+            // 处理填空横线
+            result += char;
+        } else {
+            // 标点符号
+            result += `<ruby>${char}<rt>&nbsp;</rt></ruby>`;
+            pyIdx++;
+        }
+    }
+    return result;
 }
 
-function startApp(idx) { currentIdx=idx; isMistakeMode=false; document.getElementById('cover-page').style.transform='translateY(-100%)'; document.getElementById('app').style.display='flex'; renderQuestion(); }
+function buildDatabase() {
+    for(let i=0; i<20; i++) {
+        let isTrue = Math.random() > 0.5;
+        questions.push({ id:i, type:1, text: vocab[i].c, visual: isTrue?vocab[i].e:vocab[(i+5)%20].e, answer:isTrue, title:`词汇判断` });
+    }
+    const p2data = [
+        {s:"他在书店看书。", a:"📖"}, {s:"我想吃一个苹果。", a:"🍎"}, {s:"外面下雨了。", a:"🌧️"},
+        {s:"我坐飞机去北京。", a:"✈️"}, {s:"李老师在学校。", a:"👩‍🏫"}, {s:"她有一只小猫。", a:"🐱"},
+        {s:"我想喝一点儿茶。", a:"☕"}, {s:"他在桌子下面。", a:"🪑"}, {s:"我去商店买衣服。", a:"👕"},
+        {s:"她在医院工作。", a:"🏥"}, {s:"请坐在椅子上。", a:"💺"}, {s:"今天有大雨。", a:"🌧️"},
+        {s:"这是我的电脑。", a:"💻"}, {s:"我想看电影。", a:"🎬"}, {s:"饭店里有很多人。", a:"🍱"},
+        {s:"他在打出租车。", a:"🚕"}, {s:"这个水果很好吃。", a:"🍇"}, {s:"她是我的学生。", a:"🧒"},
+        {s:"去看医生吧。", a:"👨‍⚕️"}, {s:"学校很大。", a:"🏫"}
+    ];
+    p2data.forEach((d, i) => {
+        let opts = [d.a, "🚗", "🏠", "🥤"].sort(()=>Math.random()-0.5);
+        questions.push({ id:i+20, type:2, text:d.s, options:opts, answer:opts.indexOf(d.a), title:`句子选图` });
+    });
+    const p3data = [
+        {q:"你好，很高兴认识你。", a:"我也很高兴认识你。"}, {q:"谢谢你。", a:"不客气。"},
+        {q:"再见，明天见。", a:"明天见。"}, {q:"这个杯子多少钱？", a:"二十块钱。"},
+        {q:"今天星期几？", a:"今天星期三。"}, {q:"你叫什么名字？", a:"我叫王小明。"},
+        {q:"你在做什么呢？", a:"我在看电视呢。"}, {q:"你会说汉语吗？", a:"我会说一点儿。"},
+        {q:"现在几点了？", a:"下午三点半。"}, {q:"你在哪儿？", a:"我在商店里。"},
+        {q:"那是你的猫吗？", a:"是的，那是我的。"}, {q:"天气怎么样？", a:"太热了。"},
+        {q:"你是哪国人？", a:"我是中国人。"}, {q:"他多大了？", a:"他五岁了。"},
+        {q:"你要喝点儿水吗？", a:"好的，谢谢。"}, {q:"谁在房间里？", a:"是我的老师。"},
+        {q:"你会做饭吗？", a:"我不会。"}, {q:"北京大吗？", a:"北京很大。"},
+        {q:"你想去哪儿？", a:"我想去饭店。"}, {q:"你会写汉字吗？", a:"我会写。"}
+    ];
+    p3data.forEach((d, i) => {
+        let opts = [d.a, "没关系。", "很漂亮。", "没去医院。"].sort(()=>Math.random()-0.5);
+        questions.push({ id:i+40, type:3, text:d.q, options:opts, answer:opts.indexOf(d.a), title:`对话配对` });
+    });
+    const p4data = [
+        {s:"我坐____去北京。", o:["飞机", "电脑", "桌子", "苹果"], a:0},
+        {s:"你想____什么？", o:["喝", "看", "说", "去"], a:0},
+        {s:"他是我的____。", o:["老师", "天气", "椅子", "名字"], a:0},
+        {s:"外面____了，别出去。", o:["下雨", "说话", "看书", "睡觉"], a:0},
+        {s:"现在____点钟？", o:["几", "多", "什么", "哪儿"], a:0},
+        {s:"我会说____汉语。", o:["一点儿", "一些", "几个", "多少"], a:0},
+        {s:"请坐，请____茶。", o:["喝", "吃", "买", "叫"], a:0},
+        {s:"这个杯子三十____。", o:["块", "月", "号", "年"], a:0},
+        {s:"他在____工作。", o:["医院", "衣服", "水果", "电脑"], a:0},
+        {s:"那个字怎么____？", o:["读", "听", "喝", "叫"], a:0},
+        {s:"我不____他。", o:["认识", "漂亮", "对不起", "没关系"], a:0},
+        {s:"明天有____。", o:["电影", "再见", "谢谢", "名字"], a:0},
+        {s:"桌子____有一本书。", o:["上", "后", "前", "里"], a:0},
+        {s:"你____岁了？", o:["几", "多", "什么", "那"], a:0},
+        {s:"我想去____买东西。", o:["商店", "天气", "医生", "衣服"], a:0},
+        {s:"那个衣服太____了。", o:["漂亮", "认识", "会", "叫"], a:0},
+        {s:"你____什么名字？", o:["叫", "写", "看", "想"], a:0},
+        {s:"爸爸在____呢。", o:["睡觉", "分钟", "钱", "哪儿"], a:0},
+        {s:"你会____汉语吗？", o:["说", "喝", "吃", "去"], a:0},
+        {s:"很高兴____你。", o:["认识", "对不起", "不客气", "再见"], a:0}
+    ];
+    p4data.forEach((d, i) => {
+        questions.push({ id:i+60, type:4, text:d.s, options:d.o, answer:d.a, title:`选词填空` });
+    });
+}
+
+function startApp(idx) { 
+    currentIdx = idx; isMistakeMode = false;
+    document.getElementById('q-mode').style.display = 'none';
+    document.getElementById('cover-page').style.transform = 'translateY(-100%)';
+    document.getElementById('app').style.display = 'flex';
+    renderQuestion(); 
+}
 
 function renderQuestion() {
-    const q = isMistakeMode?mistakes[currentIdx]:questions[currentIdx];
-    document.getElementById('q-info').innerText = `${q.title} - ${isMistakeMode?(currentIdx+1)+'/'+mistakes.length:(currentIdx%20+1)+'/20'}`;
-    document.getElementById('progress-fill').style.width = isMistakeMode?`${(currentIdx+1)/mistakes.length*100}%`:`${(currentIdx%20+1)/20*100}%`;
+    const q = isMistakeMode ? mistakes[currentIdx] : questions[currentIdx];
+    document.getElementById('q-info').innerText = isMistakeMode ? `MISTAKE ${currentIdx+1}/${mistakes.length}` : `${q.title} ${(currentIdx%20)+1}/20`;
+    document.getElementById('progress-fill').style.width = isMistakeMode ? `${(currentIdx+1)/mistakes.length*100}%` : `${((currentIdx%20)+1)/20*100}%`;
+    
     document.getElementById('reading-text').innerHTML = toRuby(q.text);
-    document.getElementById('sub-text').innerHTML = q.sub?toRuby(q.sub):"";
-    const grid = document.getElementById('options-grid'); const visual = document.getElementById('visual-content');
+    const grid = document.getElementById('options-grid');
+    const visual = document.getElementById('visual-content');
     grid.innerHTML = ''; visual.style.display = (q.type===1)?'block':'none';
-    if(q.type===1 || q.type===5) {
-        if(q.type===1) visual.innerText = q.visual;
-        grid.innerHTML = `<div class="opt-item" onclick="handleAns(true)">${toRuby('对')} True</div><div class="opt-item" onclick="handleAns(false)">${toRuby('错')} False</div>`;
+    
+    if(q.type === 1) {
+        visual.innerText = q.visual;
+        grid.innerHTML = `<div class="opt-item" onclick="handleAnswer(true)">✔️ Correct</div><div class="opt-item" onclick="handleAnswer(false)">❌ Wrong</div>`;
     } else {
-        q.options.forEach((o,i)=>grid.innerHTML += `<div class="opt-item ${q.type===2?'opt-img':''}" onclick="handleAns(${i})">${q.type===2?o:toRuby(o)}</div>`);
+        q.options.forEach((o, i) => {
+            const content = q.type === 2 ? `<span class="opt-img">${o}</span>` : toRuby(o);
+            grid.innerHTML += `<div class="opt-item" onclick="handleAnswer(${i})">${content}</div>`;
+        });
     }
 }
 
-function handleAns(c) {
-    const q = isMistakeMode?mistakes[currentIdx]:questions[currentIdx];
-    const isR = c===q.answer;
-    const fb = document.getElementById('feedback-pop'); fb.innerText = isR?"✔️":"❌"; fb.style.color = isR?"#4cd137":"#ff4757"; fb.style.display='block';
-    if(isR) { if(isMistakeMode) mistakes.splice(currentIdx, 1); else partScores[Math.floor(q.id/20)]++; }
-    else if(!isMistakeMode && !mistakes.some(m=>m.id===q.id)) mistakes.push(q);
-    localStorage.setItem('hsk1_r100_final_v12', JSON.stringify(mistakes));
-    setTimeout(()=>{ fb.style.display='none'; if(isMistakeMode){ if(mistakes.length===0) showSum(true); else {if(currentIdx>=mistakes.length) currentIdx=0; renderQuestion();} } else { if((currentIdx+1)%20===0) showSum(false); else {currentIdx++; renderQuestion();} } }, 800);
+function handleAnswer(choice) {
+    const q = isMistakeMode ? mistakes[currentIdx] : questions[currentIdx];
+    const isCorrect = choice === q.answer;
+    const fb = document.getElementById('feedback-pop');
+    fb.innerText = isCorrect ? "✔️" : "❌"; fb.style.color = isCorrect ? "#4cd137" : "#ff4757"; fb.style.display = 'block';
+
+    if(isCorrect) {
+        if(isMistakeMode) {
+            mistakes.splice(currentIdx, 1);
+            localStorage.setItem('hsk1_reading_err', JSON.stringify(mistakes));
+        } else {
+            partScores[Math.floor(currentIdx/20)]++;
+        }
+    } else {
+        if(!isMistakeMode && !mistakes.some(m=>m.id===q.id)) {
+            mistakes.push(q); localStorage.setItem('hsk1_reading_err', JSON.stringify(mistakes));
+        }
+    }
+
+    setTimeout(() => {
+        fb.style.display = 'none';
+        if(isMistakeMode) {
+            if(mistakes.length === 0) showSummary(true);
+            else { if(currentIdx >= mistakes.length) currentIdx = 0; renderQuestion(); }
+        } else {
+            if((currentIdx + 1) % 20 === 0) showSummary(false);
+            else { currentIdx++; renderQuestion(); }
+        }
+    }, 800);
 }
 
-function showSum(m) { document.getElementById('summary-screen').style.display='flex'; document.getElementById('final-score').innerText = m?100:partScores[Math.floor(currentIdx/20)]*5; }
-function toggleOverlay(id, s) { document.getElementById(id).style.display = s?'block':'none'; if(s&&id==='list-view') renderList(); if(s&&id==='mistake-view') renderMistakeList(); }
-
-function renderList() { 
-    const content = document.getElementById('list-content');
-    content.innerHTML = questions.map((q,i)=>`
-        <div class="list-item" onclick="jumpTo(${i}, false)">
-            <small style="color:var(--gold)">Q${i+1} [${q.title}]</small><br>
-            ${toRuby(q.text.slice(0,30))}${q.text.length>30?'...':''}
-        </div>`).join(''); 
+function showSummary(fromMistake) {
+    document.getElementById('summary-screen').style.display = 'flex';
+    const sNum = document.getElementById('final-score');
+    const pText = document.getElementById('praise-text');
+    if(fromMistake) {
+        document.getElementById('sum-title').innerText = "MISTAKES CLEARED!";
+        sNum.innerText = "100";
+        pText.innerText = "太棒了！阅读错题全部解决！";
+    } else {
+        const s = partScores[Math.floor(currentIdx/20)];
+        sNum.innerText = s * 5;
+        pText.innerText = s > 15 ? "真厉害！你的阅读水平很棒！" : "做得好！多看多读会更棒。";
+    }
 }
 
-function renderMistakeList() { 
-    const content = document.getElementById('mistake-content');
-    content.innerHTML = mistakes.length?mistakes.map((q,i)=>`
-        <div class="list-item" onclick="jumpTo(${i}, true)">
-            <small style="color:var(--pinyin-red)">Mistake ${i+1}</small><br>
-            ${toRuby(q.text.slice(0,30))}...
-        </div>`).join(''):"<p style='text-align:center;'>Empty! Keep it up!</p>"; 
+function toggleOverlay(id, show) {
+    document.getElementById(id).style.display = show?'block':'none';
+    if(show && id==='list-view') renderList();
+    if(show && id==='mistake-view') renderMistakeList();
 }
 
-function jumpTo(i,m) { currentIdx=i; isMistakeMode=m; toggleOverlay(m?'mistake-view':'list-view',false); document.getElementById('q-mode').style.display=m?'inline-block':'none'; document.getElementById('cover-page').style.transform='translateY(-100%)'; document.getElementById('app').style.display='flex'; renderQuestion(); }
-function exitToCover() { document.getElementById('cover-page').style.transform='translateY(0)'; }
-window.onload = buildData;
+function renderList() {
+    document.getElementById('list-content').innerHTML = questions.map((q, i) => 
+        `<div class="list-card" onclick="jumpTo(${i}, false)"><span><b>${i+1}.</b> ${q.text.substring(0,10)}...</span><span style="color:var(--gold)">GO</span></div>`
+    ).join('');
+}
+
+function renderMistakeList() {
+    const c = document.getElementById('mistake-content');
+    if(!mistakes.length) { c.innerHTML="No mistakes!"; return; }
+    c.innerHTML = mistakes.map((q, i) => 
+        `<div class="list-card" onclick="jumpTo(${i}, true)"><span>${q.text.substring(0,10)}...</span><span style="color:var(--pinyin-red)">FIX</span></div>`
+    ).join('');
+}
+
+function jumpTo(idx, isMistake) {
+    currentIdx = idx; isMistakeMode = isMistake;
+    toggleOverlay(isMistake ? 'mistake-view' : 'list-view', false);
+    document.getElementById('q-mode').style.display = isMistake ? 'inline-block' : 'none';
+    document.getElementById('cover-page').style.transform = 'translateY(-100%)';
+    document.getElementById('app').style.display = 'flex';
+    renderQuestion();
+}
+
+function nextQuestion() { if(!isMistakeMode && (currentIdx+1)%20!==0) { currentIdx++; renderQuestion(); } }
+function prevQuestion() { if(!isMistakeMode && currentIdx%20!==0) { currentIdx--; renderQuestion(); } }
+function exitToCover() { document.getElementById('cover-page').style.transform = 'translateY(0)'; }
+
+window.onload = buildDatabase;
 </script>
 </body>
 </html>
