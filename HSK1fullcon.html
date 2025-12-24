@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, landscape=yes">
+    <title>HSK 1 Conversation Complete - XUSFUNCHINESE</title>
+    <style>
+        :root {
+            --primary: #01579b; 
+            --accent: #e1f5fe;  
+            --gold: #fbc02d;
+            --pinyin: #d0021b; 
+            --night-sky: radial-gradient(circle at center, #001f3f 0%, #000510 100%);
+        }
+        
+        body { 
+            margin: 0; font-family: "Arial Black", "Segoe UI", Tahoma, sans-serif; 
+            background: linear-gradient(135deg, #0277bd 0%, #002f6c 100%); 
+            height: 100vh; display: flex; flex-direction: column; overflow: hidden; position: relative;
+        }
+
+        /* 金光流星封面 */
+        #cover-page {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--night-sky); z-index: 5000; display: flex;
+            flex-direction: column; justify-content: center; align-items: center;
+            cursor: pointer; transition: opacity 0.8s ease-out, visibility 0.8s; overflow: hidden;
+        }
+        #star-container {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        }
+        .star {
+            position: absolute; top: 50%; left: 50%; width: 2px; height: 2px;
+            background: white; border-radius: 50%; box-shadow: 0 0 10px #fff;
+            animation: shoot linear infinite;
+        }
+        @keyframes shoot {
+            0% { transform: translate(-50%, -50%) rotate(var(--angle)) translateX(0); opacity: 1; }
+            100% { transform: translate(-50%, -50%) rotate(var(--angle)) translateX(1000px); opacity: 0; width: 160px; }
+        }
+        .cover-content { text-align: center; z-index: 10; padding: 20px; }
+        .cover-title { font-size: 8vw; color: var(--gold); line-height: 1.1; margin: 0; font-weight: 900; text-shadow: 0 0 30px rgba(251,192,45,0.8), 0 0 60px rgba(251,192,45,0.4); animation: glow 2s infinite alternate; }
+        .cover-subtitle { font-size: 6vw; color: white; margin-top: 5px; font-weight: 900; }
+        @keyframes glow { from { transform: scale(1); } to { transform: scale(1.05); } }
+
+        header { 
+            background: rgba(255,255,255,0.95); padding: 10px 20px; 
+            display: flex; justify-content: space-between; align-items: center; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 100; 
+        }
+        .nav-btns button { 
+            padding: 8px 12px; margin-right: 5px; border-radius: 20px; border: 2px solid var(--primary); 
+            cursor: pointer; font-weight: bold; background: white; color: var(--primary);
+        }
+        .active-mode { background: var(--primary) !important; color: white !important; }
+
+        main { flex: 1; display: flex; padding: 20px; gap: 15px; overflow: hidden; }
+        #left-panel { flex: 1; background: rgba(255,255,255,0.95); border-radius: 30px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 4px solid var(--accent); }
+        #right-panel { flex: 1.6; background: rgba(255,255,255,0.95); border-radius: 30px; padding: 30px; display: flex; flex-direction: column; overflow-y: auto; border: 4px solid var(--accent); position: relative; }
+
+        ruby { ruby-align: center; font-size: 36px; margin: 0 4px; line-height: 2.2; font-weight: 600; }
+        rt { font-size: 16px; color: var(--pinyin); font-weight: bold; }
+        .eng-hint { display: block; font-size: 24px; color: #333; margin-top: 15px; border-top: 2px dashed #ccc; padding-top: 10px; font-style: italic; }
+        #emoji-display { font-size: 110px; margin-bottom: 20px; }
+        
+        .option-btn { background: white; border: 2px solid var(--primary); padding: 15px; margin: 8px 0; border-radius: 15px; cursor: pointer; font-size: 20px; width: 100%; transition: 0.2s; text-align: left;}
+        .option-btn:hover { background: var(--accent); }
+        
+        #scroll-view { display: none; width: 100%; overflow-y: auto; padding: 30px; background: white; border-radius: 30px; }
+        .list-row { border-bottom: 1px solid var(--accent); padding: 15px; cursor: pointer; display: flex; align-items: center; }
+        .list-row:hover { background: var(--accent); }
+        
+        .hidden { display: none !important; }
+        #timer-display { font-size: 24px; color: #d32f2f; font-weight: bold; margin-right: 15px; }
+        #score-val { color: var(--gold); }
+        .nav-buttons { display: flex; justify-content: space-between; margin-top: 10px; }
+        .nav-buttons button { width: 48%; }
+    </style>
+</head>
+<body>
+
+<div id="cover-page" onclick="enterApp()">
+    <div id="star-container"></div>
+    <div class="cover-content">
+        <h1 class="cover-title">HSK 1</h1>
+        <div class="cover-subtitle">Complete Conversations</div>
+        <div style="color:white; margin-top:20px; letter-spacing:3px; font-weight:bold;">CLICK TO START</div>
+    </div>
+</div>
+
+<header>
+    <div class="nav-btns">
+        <button onclick="setMode('study')" id="btn-study">📖 Study</button>
+        <button onclick="setMode('review')" id="btn-review">🔄 Review</button>
+        <button onclick="setMode('quiz')" id="btn-quiz">⚡ Rush (30s)</button>
+        <button onclick="setMode('mistakes')" id="btn-mistakes">❌ Mistake</button>
+        <button onclick="setMode('list')" id="btn-list">📜 Bank</button>
+    </div>
+    <div style="display: flex; align-items: center;">
+        <span id="timer-display" class="hidden">00:30</span>
+        <span style="font-weight: bold; color: var(--primary);">Score: <span id="score-val">0</span></span>
+    </div>
+</header>
+
+<main>
+    <div id="main-ui" style="display: flex; width: 100%; gap: 15px;">
+        <div id="left-panel">
+            <div id="emoji-display">✨</div>
+            <button onclick="speakQuestion()" style="padding: 15px 40px; border-radius: 50px; cursor: pointer; background: var(--primary); color: white; border: none; font-weight: bold; font-size: 20px;">🔊 Ask</button>
+        </div>
+        <div id="right-panel">
+            <div id="display-area"></div>
+            <div id="hint-box" style="margin-top:20px; padding:15px; background:#fffde7; border-left:8px solid var(--gold); border-radius:12px; cursor:pointer;" class="hidden" onclick="speakReply()"></div>
+            <div id="interaction-area" style="margin-top: 15px;"></div>
+        </div>
+    </div>
+    <div id="scroll-view"></div>
+</main>
+
+<script>
+    // 完整数据库，合并Conversation1和Conversation2，总计100组（允许少量重复以覆盖所有词汇）
+    const database = [
+        ["你好！", "nǐ hǎo !", "Hello!", "😊", {cn: "你好！", py: "nǐ hǎo !", en: "Hello!"}],
+        ["你叫什么名字？", "nǐ jiào shén me míng zi ?", "What's your name?", "📝", {cn: "我叫大卫。", py: "wǒ jiào dà wèi .", en: "My name is David."}],
+        ["你是老师吗？", "nǐ shì lǎo shī ma ?", "Are you a teacher?", "👨‍🏫", {cn: "不是，我是学生。", py: "bú shì , wǒ shì xué sheng .", en: "No, I am a student."}],
+        ["你是哪国人？", "nǐ shì nǎ guó rén ?", "Which country are you from?", "🌍", {cn: "我是美国人。", py: "wǒ shì měi guó rén .", en: "I am American."}],
+        ["谢谢你！", "xiè xie nǐ !", "Thank you!", "🙏", {cn: "不客气。", py: "bú kè qi .", en: "You're welcome."}],
+        ["再见！", "zài jiàn !", "Goodbye!", "👋", {cn: "再见！", py: "zài jiàn !", en: "Goodbye!"}],
+        ["你会说汉语吗？", "nǐ huì shuō hàn yǔ ma ?", "Can you speak Chinese?", "🗣️", {cn: "我会说一点儿。", py: "wǒ huì shuō yì diǎnr .", en: "I can speak a little bit."}],
+        ["你的老师是谁？", "nǐ de lǎo shī shì shéi ?", "Who is your teacher?", "👩‍🏫", {cn: "她是李老师。", py: "tā shì lǐ lǎo shī .", en: "She is Teacher Li."}],
+        ["今天几号？", "jīn tiān jǐ hào ?", "What's the date today?", "📅", {cn: "今天一月一号。", py: "jīn tiān yī yuè yī hào .", en: "Today is Jan 1st."}],
+        ["今天星期几？", "jīn tiān xīng qī jǐ ?", "What day is it today?", "🗓️", {cn: "今天星期三。", py: "jīn tiān xīng qī sān .", en: "Today is Wednesday."}],
+        ["你想喝什么？", "nǐ xiǎng hē shén me ?", "What do you want to drink?", "🍵", {cn: "我想喝茶。", py: "wǒ xiǎng hē chá .", en: "I want to drink tea."}],
+        ["你想吃什么？", "nǐ xiǎng chī shén me ?", "What do you want to eat?", "🍚", {cn: "我想吃米饭。", py: "wǒ xiǎng chī mǐ fàn .", en: "I want to eat rice."}],
+        ["这个多少钱？", "zhè ge duō shao qián ?", "How much is this?", "💰", {cn: "三十块。", py: "sān shí kuài .", en: "Thirty RMB."}],
+        ["你会写汉字吗？", "nǐ huì xiě hàn zì ma ?", "Can you write Chinese characters?", "✍️", {cn: "我会写一些。", py: "wǒ huì xiě yì xiē .", en: "I can write some."}],
+        ["现在几点？", "xiàn zài jǐ diǎn ?", "What time is it?", "⌚", {cn: "十点十分。", py: "shí diǎn shí fēn .", en: "Ten past ten."}],
+        ["你家有几口人？", "nǐ jiā yǒu jǐ kǒu rén ?", "How many in family?", "👨‍👩‍👧‍👦", {cn: "三口人。", py: "sān kǒu rén .", en: "Three people."}],
+        ["你女儿多大了？", "nǐ nǚ ér duō dà le ?", "How old is your daughter?", "👧", {cn: "她五岁了。", py: "tā wǔ suì le .", en: "She is five."}],
+        ["你会做中国菜吗？", "nǐ huì zuò zhōng guó cài ma ?", "Can you cook Chinese food?", "🍳", {cn: "我会做。", py: "wǒ huì zuò .", en: "I can."}],
+        ["他在哪儿？", "tā zài nǎ r ?", "Where is he?", "📍", {cn: "他在学校。", py: "tā zài xué xiào .", en: "He is at school."}],
+        ["书店在哪儿？", "shū diàn zài nǎ r ?", "Where is the bookstore?", "📚", {cn: "在医院前面。", py: "zài yī yuàn qián mian .", en: "In front of the hospital."}],
+        ["他在做什么？", "tā zài zuò shén me ?", "What is he doing?", "📱", {cn: "他在看电影。", py: "tā zài kàn diàn yǐng .", en: "Watching a movie."}],
+        ["昨天天气怎么样？", "zuó tiān tiān qì zěn me yàng ?", "How was the weather yesterday?", "☀️", {cn: "很好。", py: "hěn hǎo .", en: "Very good."}],
+        ["明天会下雨吗？", "míng tiān huì xià yǔ ma ?", "Will it rain tomorrow?", "☔", {cn: "不会下雨。", py: "bú huì xià yǔ .", en: "It won't rain."}],
+        ["你身体怎么样？", "shēn tǐ zěn me yàng ?", "How's your health?", "💪", {cn: "我身体很好。", py: "wǒ shēn tǐ hěn hǎo .", en: "I'm very well."}],
+        ["你买什么了？", "nǐ mǎi shén me le ?", "What did you buy?", "🛍️", {cn: "一些苹果。", py: "yì xiē píng guǒ .", en: "Some apples."}],
+        ["你怎么去学校？", "nǐ zěn me qù xué xiào ?", "How do you go to school?", "🚲", {cn: "坐出租车。", py: "zuò chū zū chē .", en: "By taxi."}],
+        ["衣服漂亮吗？", "yī fu piào liang ma ?", "Are the clothes pretty?", "👗", {cn: "很漂亮。", py: "hěn piào liang .", en: "Very pretty."}],
+        ["什么时候回家？", "shí hou huí jiā ?", "When go home?", "🏠", {cn: "下午五点。", py: "xià wǔ wǔ diǎn .", en: "At 5 PM."}],
+        ["你认识他吗？", "nǐ rèn shi tā ma ?", "Do you know him?", "👤", {cn: "不认识。", py: "bú rèn shi .", en: "Don't know him."}],
+        ["请坐，喝点水。", "qǐng zuò , hē diǎn shuǐ .", "Please sit and drink some water.", "🥤", {cn: "谢谢。", py: "xiè xie .", en: "Thank you."}],
+        ["那是谁的杯子？", "nà shì shéi de bēi zi ?", "Whose cup is that?", "🥛", {cn: "我爸爸的。", py: "wǒ bà ba de .", en: "My father's."}],
+        ["他在哪儿工作？", "tā zài nǎ r gōng zuò ?", "Where does he work?", "🏥", {cn: "他在医院。", py: "tā zài yī yuàn .", en: "At a hospital."}],
+        ["桌子上有什么？", "zhuō zi shang yǒu shén me ?", "What's on the table?", "🖥️", {cn: "有一台电脑。", py: "yǒu yì tái diàn nǎo .", en: "A computer."}],
+        ["你喜欢看书吗？", "nǐ xǐ huan kàn shū ma ?", "Do you like reading?", "📖", {cn: "我很喜欢。", py: "wǒ hěn xǐ huan .", en: "I like it a lot."}],
+        ["这里有人吗？", "zhè lǐ yǒu rén ma ?", "Is anyone here?", "🪑", {cn: "没有人。", py: "méi yǒu rén .", en: "No one."}],
+        ["你是哪年出生的？", "nǐ shì nǎ nián chū shēng de ?", "What year were you born?", "🍼", {cn: "一九九五年。", py: "yī jiǔ jiǔ wǔ nián .", en: "In 1995."}],
+        ["外面冷吗？", "wài mian lěng ma ?", "Is it cold outside?", "❄️", {cn: "不冷，很热。", py: "bù lěng , hěn rè .", en: "Not cold, hot."}],
+        ["你为什么不吃？", "nǐ wèi shén me bù chī ?", "Why aren't you eating?", "🙅‍♂️", {cn: "我不饿。", py: "wǒ bú è .", en: "I'm not hungry."}],
+        ["你会开车吗？", "nǐ huì kāi chē ma ?", "Can you drive?", "🚗", {cn: "我会开。", py: "wǒ huì kāi .", en: "I can drive."}],
+        ["车站怎么走？", "chē zhàn zěn me zǒu ?", "How to get to the station?", "🚉", {cn: "一直走。", py: "yì zhí zǒu .", en: "Go straight."}],
+        ["学汉语多久了？", "xué hàn yǔ duō jiǔ le ?", "How long have you been learning Chinese?", "⏳", {cn: "一年了。", py: "yì nián le .", en: "One year."}],
+        ["电影几点开始？", "diàn yǐng jǐ diǎn kāi shǐ ?", "What time does the movie start?", "🍿", {cn: "晚上七点。", py: "wǎn shang qī diǎn .", en: "7 PM."}],
+        ["买几本书？", "mǎi jǐ běn shū ?", "How many books to buy?", "🔖", {cn: "买三本。", py: "mǎi sān běn .", en: "Buy three."}],
+        ["汉语说得怎么样？", "hàn yǔ shuō de zěn me yàng ?", "How is your spoken Chinese?", "👏", {cn: "不太好。", py: "bú tài hǎo .", en: "Not very good."}],
+        ["王先生在吗？", "wáng xiān sheng zài ma ?", "Is Mr. Wang here?", "🚪", {cn: "他不在。", py: "tā bú zài .", en: "He is out."}],
+        ["认识路吗？", "rèn shi lù ma ?", "Do you know the way?", "🗺️", {cn: "认识，跟我走。", py: "rèn shi , gēn wǒ zǒu .", en: "Yes, follow me."}],
+        ["一共多少钱？", "yí gòng duō shao qián ?", "How much in total?", "💴", {cn: "五十块。", py: "wǔ shí kuài .", en: "50 RMB."}],
+        ["可以打电话吗？", "kě yǐ dǎ diàn huà ma ?", "Can I make a phone call?", "📞", {cn: "可以。", py: "kě yǐ .", en: "Yes."}],
+        ["那是你的猫吗？", "nà shì nǐ de māo ma ?", "Is that your cat?", "🐱", {cn: "不是，我姐姐的。", py: "bú shì , wǒ jiě jie de .", en: "No, my sister's."}],
+        ["我们走吧！", "wǒ men zǒu ba !", "Let's go!", "🏃", {cn: "走吧。", py: "zǒu ba .", en: "Let's go."}],
+        ["你在看什么？", "nǐ zài kàn shén me ?", "What are you watching?", "👁️", {cn: "我在看电影。", py: "wǒ zài kàn diàn yǐng", en: "I am watching a movie."}],
+        ["你会读这个字吗？", "nǐ huì dú zhè ge zì ma ?", "Can you read this character?", "📖", {cn: "我不认识这个字。", py: "wǒ bú rèn shi zhè ge zì", en: "I don't know this character."}],
+        ["你会写汉字吗？", "nǐ huì xiě hàn zì ma ?", "Can you write Chinese characters?", "✍️", {cn: "我会写，太难了。", py: "wǒ huì xiě , tài nán le", en: "I can write, but it's too hard."}],
+        ["请来这里坐。", "qǐng lái zhè lǐ zuò .", "Please come and sit here.", "🏃", {cn: "谢谢你，太好了。", py: "xiè xie nǐ , tài hǎo le", en: "Thank you, that's great."}],
+        ["你什么时候回家？", "nǐ shí hou huí jiā ?", "When are you going home?", "🏠", {cn: "下午五点回。", py: "xià wǔ wǔ diǎn huí", en: "Returning at 5 PM."}],
+        ["我们去商店吧？", "wǒ men qù shāng diàn ba ?", "Shall we go to the shop?", "🛒", {cn: "好，我想买水果。", py: "hǎo , wǒ xiǎng mǎi shuǐ guǒ", en: "OK, I want to buy fruit."}],
+        ["你想吃什么菜？", "nǐ xiǎng chī shén me cài ?", "What dish do you want to eat?", "🥗", {cn: "我想吃中国菜。", py: "wǒ xiǎng chī zhōng guó cài", en: "I want to eat Chinese food."}],
+        ["你在做什么？", "nǐ zài zuò shén me ?", "What are you doing?", "🛠️", {cn: "我在做饭。", py: "wǒ zài zuò fàn", en: "I am cooking."}],
+        ["他在哪儿工作？", "tā zài nǎ r gōng zuò ?", "Where does he work?", "💼", {cn: "他在医院工作。", py: "tā zài yī yuàn gōng zuò", en: "He works in a hospital."}],
+        ["明天会下雨吗？", "míng tiān huì xià yǔ ma ?", "Will it rain tomorrow?", "🌧️", {cn: "明天不下雨。", py: "míng tiān bú xià yǔ", en: "It won't rain tomorrow."}],
+        ["认识你很高兴。", "rèn shi nǐ hěn gāo xìng .", "Nice to meet you.", "🤝", {cn: "我也很高兴。", py: "wǒ yě hěn gāo xìng", en: "I am happy too."}],
+        ["你的衣服很漂亮。", "nǐ de yī fu hěn piào liang .", "Your clothes are beautiful.", "👗", {cn: "谢谢，太漂亮了。", py: "xiè xie , tài piào liang le", en: "Thank you, they are so pretty."}],
+        ["这个多少钱？", "zhè ge duō shao qián ?", "How much is this?", "💰", {cn: "八十块钱。", py: "bā shí kuài qián", en: "80 RMB."}],
+        ["你怎么去学校？", "nǐ zěn me qù xué xiào ?", "How do you go to school?", "🚲", {cn: "我坐出租车去。", py: "wǒ zuò chū zū chē qù", en: "I go by taxi."}],
+        ["天气怎么样？", "tiān qì zěn me yàng ?", "How is the weather?", "🌤️", {cn: "天气太热了。", py: "tiān qì tài rè le", en: "The weather is too hot."}],
+        ["他是谁？", "tā shì shéi ?", "Who is he?", "👤", {cn: "他是我的医生。", py: "tā shì wǒ de yī shēng", en: "He is my doctor."}],
+        ["书在哪儿？", "shū zài nǎ r ?", "Where is the book?", "📍", {cn: "书在桌子上。", py: "shū zài zhuō zi shang", en: "The book is on the table."}],
+        ["你想看电影吗？", "nǐ xiǎng kàn diàn yǐng ma ?", "Do you want to watch a movie?", "🎬", {cn: "不想看，太累了。", py: "bù xiǎng kàn , tài lèi le", en: "No, I'm too tired."}],
+        ["我看电视，你呢？", "wǒ kàn diàn shì , nǐ ne ?", "I'm watching TV, and you?", "📺", {cn: "我听音乐。", py: "wǒ tīng yīn yuè", en: "I'm listening to music."}],
+        ["这是谁的电脑？", "zhè shì shéi de diàn nǎo ?", "Whose computer is this?", "💻", {cn: "我同学的。", py: "wǒ tóng xué de", en: "My classmate's."}],
+        ["你在北京住多久？", "nǐ zài běi jīng zhù duō jiǔ ?", "How long stay in Beijing?", "🏙️", {cn: "住三个月。", py: "zhù sān ge yuè", en: "Stay for 3 months."}],
+        ["他在学习什么？", "tā zài xué xí shén me ?", "What is he studying?", "🇨🇳", {cn: "他在学习汉语。", py: "tā zài xué xí hàn yǔ", en: "He is studying Chinese."}],
+        ["你叫什么名字？", "nǐ jiào shén me míng zi ?", "What is your name?", "📛", {cn: "我叫王方。", py: "wǒ jiào wáng fāng", en: "My name is Wang Fang."}],
+        ["你想买什么东西？", "nǐ xiǎng mǎi shén me dōng xi ?", "What things do you want to buy?", "📦", {cn: "我想买些杯子。", py: "wǒ xiǎng mǎi xiē bēi zi", en: "I want to buy some cups."}],
+        ["请多吃点儿水果。", "qǐng duō chī diǎnr shuǐ guǒ .", "Please eat more fruit.", "🍎", {cn: "谢谢，我很喜欢。", py: "xiè xie , wǒ hěn xǐ huan", en: "Thanks, I like it a lot."}],
+        ["你想喝茶吗？", "nǐ xiǎng hē chá ma ?", "Do you want to drink tea?", "🍵", {cn: "好的，请喝茶。", py: "hǎo de , qǐng hē chá", en: "OK, please drink tea."}],
+        ["你会做饭吗？", "nǐ huì zuò fàn ma ?", "Can you cook?", "👨‍🍳", {cn: "我会做中国菜。", py: "wǒ huì zuò zhōng guó cài", en: "I can cook Chinese food."}],
+        ["今天星期几？", "jīn tiān xīng qī jǐ ?", "What day is today?", "📅", {cn: "今天星期五。", py: "jīn tiān xīng qī wǔ", en: "Today is Friday."}],
+        ["你的猫在哪儿？", "nǐ de māo zài nǎ r ?", "Where is your cat?", "🐱", {cn: "在那儿，椅子下面。", py: "zài nà r , yǐ zi xià mian", en: "Over there, under the chair."}],
+        ["你有几个儿子？", "nǐ yǒu jǐ ge ér zi ?", "How many sons do you have?", "👦", {cn: "我有一个儿子。", py: "wǒ yǒu yí ge ér zi", en: "I have one son."}],
+        ["你女儿几岁了？", "nǐ nǚ ér jǐ suì le ?", "How old is your daughter?", "👧", {cn: "她六岁了。", py: "tā liù suì le", en: "She is six years old."}],
+        ["他在医院住几天？", "tā zài yī yuàn zhù jǐ tiān ?", "Days in hospital?", "🏥", {cn: "住七天。", py: "zhù qī tiān", en: "Stay for 7 days."}],
+        ["那是谁的书？", "nà shì shéi de shū ?", "Whose book is that?", "📚", {cn: "那是我老师的。", py: "nà shì wǒ lǎo shī de", en: "That is my teacher's."}],
+        ["你想去哪儿？", "nǐ xiǎng qù nǎ r ?", "Where do you want to go?", "✈️", {cn: "我想去北京。", py: "wǒ xiǎng qù běi jīng", en: "I want to go to Beijing."}],
+        ["你会开这辆车吗？", "nǐ huì kāi zhè liàng chē ma ?", "Can you drive this car?", "🚗", {cn: "我不开，没钱。", py: "wǒ bù kāi , méi qián", en: "I don't drive, no money."}],
+        ["桌子上有几个杯子？", "zhuō zi shang yǒu jǐ ge bēi zi ?", "How many cups on table?", "🥛", {cn: "有三个杯子。", py: "yǒu sān ge bēi zi", en: "There are three cups."}],
+        ["你怎么了？", "nǐ zěn me le ?", "What happened to you?", "🤒", {cn: "我不舒服，想睡觉。", py: "wǒ bù shū fu , xiǎng shuì jiào", en: "I'm not well, want to sleep."}],
+        ["请坐，喝点儿水。", "qǐng zuò , hē diǎnr shuǐ .", "Sit and drink some water.", "🪑", {cn: "谢谢你，不客气。", py: "xiè xie nǐ , bú kè qi", en: "Thank you, you're welcome."}],
+        ["你会写名字吗？", "nǐ huì xiě míng zi ma ?", "Can you write your name?", "📝", {cn: "我会写，你看。", py: "wǒ huì xiě , nǐ kàn", en: "I can write, look."}],
+        ["昨天你去哪儿了？", "zuó tiān nǐ qù nǎ r le ?", "Where did you go yesterday?", "🔙", {cn: "我回学校了。", py: "wǒ huí xué xiào le", en: "I went back to school."}],
+        ["你的朋友是谁？", "nǐ de péng you shì shéi ?", "Who is your friend?", "👫", {cn: "他叫李明。", py: "tā jiào lǐ míng", en: "He is called Li Ming."}],
+        ["那是你的狗吗？", "nà shì nǐ de gǒu ma ?", "Is that your dog?", "🐶", {cn: "不是，我同学的。", py: "bú shì , wǒ tóng xué de", en: "No, my classmate's."}],
+        ["这里有多少人？", "zhè lǐ yǒu duō shao rén ?", "How many people here?", "👨‍👩‍👦", {cn: "有十二个人。", py: "yǒu shí èr ge rén", en: "There are 12 people."}],
+        ["他什么时候来？", "tā shí hou lái ?", "When is he coming?", "🕘", {cn: "九点来。", py: "jiǔ diǎn lái", en: "Coming at 9 o'clock."}],
+        ["你想喝点儿什么？", "nǐ xiǎng hē diǎnr shén me ?", "What would you like to drink?", "🍹", {cn: "请喝点儿冷水。", py: "qǐng hē diǎnr lěng shuǐ", en: "Please drink some cold water."}],
+        ["汉语难不难？", "hàn yǔ nán bù nán ?", "Is Chinese hard?", "🈵", {cn: "不难，很好听。", py: "bù nán , hěn hǎo tīng", en: "Not hard, sounds good."}],
+        ["他在家做什么？", "tā zài jiā zuò shén me ?", "What is he doing at home?", "🛋️", {cn: "他在听音乐。", py: "tā zài jiā tīng yīn yuè", en: "He is listening to music."}],
+        ["谢谢，再见！", "xiè xie , zài jiàn !", "Thanks, goodbye!", "👋", {cn: "不客气，再见。", py: "bú kè qi , zài jiàn", en: "You're welcome, bye."}],
+        ["你想喝什么？", "nǐ xiǎng hē shén me ?", "What do you want to drink?", "🍵", {cn: "我想喝茶。", py: "wǒ xiǎng hē chá", en: "I want to drink tea."}],
+        ["你会说汉语吗？", "nǐ huì shuō hàn yǔ ma ?", "Can you speak Chinese?", "🗣️", {cn: "我会说一点儿。", py: "wǒ huì shuō yì diǎnr", en: "I can speak a little bit."}],
+        ["今天星期几？", "jīn tiān xīng qī jǐ ?", "What day is today?", "📅", {cn: "今天星期五。", py: "jīn tiān xīng qī wǔ", en: "Today is Friday."}],
+        ["你女儿几岁了？", "nǐ nǚ ér jǐ suì le ?", "How old is your daughter?", "👧", {cn: "她六岁了。", py: "tā liù suì le", en: "She is six years old."}],
+        ["请坐，喝点儿水。", "qǐng zuò , hē diǎnr shuǐ .", "Sit and drink some water.", "🪑", {cn: "谢谢你，不客气。", py: "xiè xie nǐ , bú kè qi", en: "Thank you, you're welcome."}],
+        ["那是你的猫吗？", "nà shì nǐ de māo ma ?", "Is that your cat?", "🐱", {cn: "不是，我姐姐的。", py: "bú shì , wǒ jiě jie de", en: "No, my sister's."}],
+        ["你会开车吗？", "nǐ huì kāi chē ma ?", "Can you drive?", "🚗", {cn: "我会开。", py: "wǒ huì kāi .", en: "I can drive."}],
+        ["你想吃什么？", "nǐ xiǎng chī shén me ?", "What to eat?", "🍚", {cn: "我想吃米饭。", py: "wǒ xiǎng chī mǐ fàn .", en: "I want to eat rice."}],
+        ["现在几点？", "xiàn zài jǐ diǎn ?", "What time is it?", "⌚", {cn: "十点十分。", py: "shí diǎn shí fēn .", en: "Ten past ten."}],
+        ["你家有几口人？", "nǐ jiā yǒu jǐ kǒu rén ?", "How many in family?", "👨‍👩‍👧‍👦", {cn: "三口人。", py: "sān kǒu rén .", en: "Three people."}],
+        ["他在哪儿？", "tā zài nǎ r ?", "Where is he?", "📍", {cn: "他在学校。", py: "tā zài xué xiào .", en: "He is at school."}],
+        ["你身体怎么样？", "shēn tǐ zěn me yàng ?", "How's your health?", "💪", {cn: "我身体很好。", py: "wǒ shēn tǐ hěn hǎo .", en: "I'm very well."}],
+        ["衣服漂亮吗？", "yī fu piào liang ma ?", "Are clothes pretty?", "👗", {cn: "很漂亮。", py: "hěn piào liang .", en: "Very pretty."}],
+        ["请坐，喝点水。", "qǐng zuò , hē diǎn shuǐ .", "Sit & drink water.", "🥤", {cn: "谢谢。", py: "xiè xie .", en: "Thank you."}],
+        ["你喜欢看书吗？", "nǐ xǐ huan kàn shū ma ?", "Like reading?", "📖", {cn: "我很喜欢。", py: "wǒ hěn xǐ huan .", en: "I like it a lot."}],
+        ["外面冷吗？", "wài mian lěng ma ?", "Cold outside?", "❄️", {cn: "不冷，很热。", py: "bù lěng , hěn rè .", en: "Not cold, hot."}],
+        ["车站怎么走？", "chē zhàn zěn me zǒu ?", "How to get to station?", "🚉", {cn: "一直走。", py: "yì zhí zǒu .", en: "Go straight."}],
+        ["电影几点开始？", "diàn yǐng jǐ diǎn kāi shǐ ?", "Movie start time?", "🍿", {cn: "晚上七点。", py: "wǎn shang qī diǎn .", en: "7 PM."}],
+        ["汉语说得怎么样？", "hàn yǔ shuō de zěn me yàng ?", "How's your Chinese?", "👏", {cn: "不太好。", py: "bú tài hǎo .", en: "Not very good."}],
+        ["认识路吗？", "rèn shi lù ma ?", "Know the way?", "🗺️", {cn: "认识，跟我走。", py: "rèn shi , gēn wǒ zǒu .", en: "Yes, follow me."}],
+        ["一共多少钱？", "yí gòng duō shao qián ?", "Total cost?", "💴", {cn: "五十块。", py: "wǔ shí kuài .", en: "50 RMB."}],
+        ["可以打电话吗？", "kě yǐ dǎ diàn huà ma ?", "Can I call?", "📞", {cn: "可以。", py: "kě yǐ .", en: "Yes."}],
+        ["我们走吧！", "wǒ men zǒu ba !", "Let's go!", "🏃", {cn: "走吧。", py: "zǒu ba .", en: "Let's go."}]
+    ];
+
+    let currentMode = 'study', currentIndex = 0, score = 0, timer = null, timeLeft = 30;
+    let mistakes = []; 
+
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playEffect(type) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        if(type === 'win') {
+            osc.frequency.setValueAtTime(987, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1318, audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        } else {
+            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+            osc.frequency.linearRampToValueAtTime(110, audioCtx.currentTime + 0.2);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        }
+        osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+    }
+
+    function initStars() {
+        const container = document.getElementById('star-container');
+        if (!container) return;
+        for(let i = 0; i < 80; i++) {
+            let s = document.createElement('div');
+            s.className = 'star';
+            s.style.setProperty('--angle', Math.random() * 360 + 'deg');
+            s.style.animationDuration = (Math.random() * 1.5 + 0.8) + 's';
+            s.style.animationDelay = Math.random() * 2 + 's';
+            container.appendChild(s);
+        }
+    }
+
+    function enterApp() {
+        const cover = document.getElementById('cover-page');
+        cover.style.opacity = '0';
+        setTimeout(() => {
+            cover.style.visibility = 'hidden';
+            cover.style.display = 'none';
+        }, 800);
+        initStars();
+        setMode('study');
+    }
+
+    function speakText(text, callback = null) {
+        window.speechSynthesis.cancel();
+        const m = new SpeechSynthesisUtterance(text);
+        m.lang = 'zh-CN'; m.rate = 0.8;
+        if (callback) m.onend = callback;
+        window.speechSynthesis.speak(m);
+    }
+
+    function speakQuestion() {
+        let activeData = (currentMode === 'mistakes') ? mistakes[currentIndex] : database[currentIndex];
+        speakText(activeData[0]);
+    }
+
+    function speakReply() {
+        let activeData = (currentMode === 'mistakes') ? mistakes[currentIndex] : database[currentIndex];
+        speakText(activeData[4].cn);
+    }
+
+    function setMode(m, jumpIndex = 0) {
+        currentMode = m; 
+        currentIndex = jumpIndex; 
+        clearInterval(timer);
+        document.querySelectorAll('.nav-btns button').forEach(b => b.classList.remove('active-mode'));
+        document.getElementById('btn-'+m).classList.add('active-mode');
+        document.getElementById('timer-display').classList.add('hidden');
+        
+        if (m === 'quiz') {
+            timeLeft = 30; score = 0;
+            document.getElementById('score-val').innerText = "0";
+            document.getElementById('timer-display').classList.remove('hidden');
+            timer = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer-display').innerText = `00:${timeLeft < 10 ? '0'+timeLeft : timeLeft}`;
+                if (timeLeft <= 0) { 
+                    clearInterval(timer); 
+                    const praises = ["Excellent!", "Great job!", "You are amazing!"];
+                    speakText(praises[Math.floor(Math.random()*praises.length)]);
+                    alert("Rush End! Your Score: " + score); 
+                    setMode('study'); 
+                }
+            }, 1000);
+        }
+
+        if(m === 'list') {
+            document.getElementById('main-ui').classList.add('hidden');
+            document.getElementById('scroll-view').style.display = 'block';
+            renderList();
+        } else {
+            document.getElementById('main-ui').classList.remove('hidden');
+            document.getElementById('scroll-view').style.display = 'none';
+            render();
+        }
+    }
+
+    function generateRubyHtml(text, pinyinStr) {
+        const chars = text.split(''); const pys = pinyinStr.split(' ');
+        let html = ""; let pyIdx = 0;
+        chars.forEach(c => {
+            if(/[\u4e00-\u9fa5]/.test(c)) {
+                html += `<ruby>${c}<rt>${pys[pyIdx] || ''}</rt></ruby>`; pyIdx++;
+            } else if (![' ', '!', '?', '！', '？', '.', '。', ','].includes(c)) {
+                html += c; pyIdx++;
+            } else html += c;
+        });
+        return html;
+    }
+
+    function render() {
+        const display = document.getElementById('display-area');
+        const interaction = document.getElementById('interaction-area');
+        const hint = document.getElementById('hint-box');
+        display.innerHTML = ""; interaction.innerHTML = ""; hint.classList.add('hidden');
+
+        if (currentMode === 'mistakes' && mistakes.length === 0) {
+            display.innerHTML = "<h2 style='text-align:center; color:#666;'>No mistakes yet! Keep going!</h2>";
+            return;
+        }
+
+        let activeData = (currentMode === 'mistakes') ? mistakes[currentIndex] : database[currentIndex];
+        document.getElementById('emoji-display').innerText = activeData[3];
+
+        if (currentMode === 'study') {
+            display.innerHTML = generateRubyHtml(activeData[0], activeData[1]) + `<span class="eng-hint">${activeData[2]}</span>`;
+            hint.innerHTML = `<div style="font-size:26px;">${generateRubyHtml(activeData[4].cn, activeData[4].py)}</div><div style="font-style:italic; color:#666; margin-top:10px;">${activeData[4].en}</div><div style="font-size:12px; color:#999; margin-top:5px; text-align:right;">🔊 Click to speak</div>`;
+            hint.classList.remove('hidden');
+            interaction.innerHTML = `
+                <div class="nav-buttons">
+                    <button class="option-btn" onclick="previousCard()" style="background:var(--accent); color:var(--primary);">← Previous</button>
+                    <button class="option-btn" onclick="nextCard()" style="background:var(--primary); color:white;">Next →</button>
+                </div>
+            `;
+            speakText(activeData[0]); 
+        } 
+        else if (currentMode === 'review') {
+            display.innerHTML = `<h1 style="font-size:48px; cursor:pointer; text-align:center;" onclick="revealReview()">${activeData[0]}</h1><p style="text-align:center; color:#888;">(Click question to see reply)</p>`;
+            interaction.innerHTML = `
+                <div class="nav-buttons">
+                    <button class="option-btn" onclick="previousCard()" style="background:var(--accent); color:var(--primary);">← Previous</button>
+                    <button class="option-btn" onclick="nextCard()" style="background:#eee; color:var(--primary);">Next →</button>
+                </div>
+            `;
+        }
+        else {
+            // Quiz (Rush) or Mistakes Mode
+            display.innerHTML = `<h2 style="font-size:32px; text-align:center; color:var(--primary); margin-bottom:10px;">Q: ${activeData[0]}</h2><p style="text-align:center; color:#666;">Choose the correct reply:</p>`;
+            
+            let choices = [activeData[4].cn];
+            while(choices.length < 4) {
+                let r = database[Math.floor(Math.random()*database.length)];
+                if(!choices.includes(r[4].cn)) choices.push(r[4].cn);
+            }
+            choices.sort(() => Math.random() - 0.5);
+
+            choices.forEach(c => {
+                const b = document.createElement('button'); b.className = 'option-btn'; b.innerText = c;
+                b.onclick = () => {
+                    if(c === activeData[4].cn) {
+                        playEffect('win'); speakReply();
+                        if (currentMode === 'quiz') { score += 10; document.getElementById('score-val').innerText = score; }
+                        b.style.background = "#4caf50"; b.style.color = "white"; 
+                        if (currentMode === 'mistakes') { mistakes.splice(currentIndex, 1); currentIndex--; }
+                        setTimeout(nextCard, 600);
+                    } else { 
+                        playEffect('fail');
+                        b.style.background = "#f44336"; b.style.color = "white";
+                        if (!mistakes.some(m => m[0] === activeData[0])) mistakes.push(activeData);
+                    }
+                };
+                interaction.appendChild(b);
+            });
+        }
+    }
+
+    function revealReview() {
+        let activeData = (currentMode === 'mistakes') ? mistakes[currentIndex] : database[currentIndex];
+        const hint = document.getElementById('hint-box');
+        hint.innerHTML = `<div style="font-size:26px;">${generateRubyHtml(activeData[4].cn, activeData[4].py)}</div><div style="font-style:italic; color:#666;">${activeData[4].en}</div>`;
+        hint.classList.remove('hidden');
+        speakReply();
+        document.getElementById('interaction-area').innerHTML = `
+            <div class="nav-buttons">
+                <button class="option-btn" onclick="previousCard()" style="background:var(--accent); color:var(--primary);">← Previous</button>
+                <button class="option-btn" onclick="nextCard()" style="background:var(--primary); color:white;">Next →</button>
+            </div>
+        `;
+    }
+
+    function nextCard() {
+        let activeList = (currentMode === 'mistakes') ? mistakes : database;
+        currentIndex++;
+        if (currentIndex >= activeList.length) {
+            currentIndex = 0;
+            if (currentMode !== 'quiz') alert("End of list!");
+        }
+        render();
+    }
+
+    function previousCard() {
+        let activeList = (currentMode === 'mistakes') ? mistakes : database;
+        currentIndex--;
+        if (currentIndex < 0) {
+            currentIndex = activeList.length - 1;
+        }
+        render();
+    }
+
+    function renderList() {
+        const view = document.getElementById('scroll-view');
+        view.innerHTML = "<h2>📜 HSK 1 Complete Conversation Bank</h2><p style='color:#666;'>Click any sentence to study!</p>";
+        database.forEach((it, idx) => {
+            const r = document.createElement('div'); r.className = 'list-row';
+            r.innerHTML = `<div style="min-width:40px; color:#999; font-weight:bold;">${idx+1}.</div>
+                <div style="font-size:32px; margin-right:15px;">${it[3]}</div>
+                <div style="flex:1;"><b>Q: ${it[0]}</b><br><small style="color:var(--primary);">A: ${it[4].cn}</small><br><small style="color:#888;">${it[4].en}</small></div>`;
+            r.onclick = () => { setMode('study', idx); };
+            view.appendChild(r);
+        });
+    }
+
+    window.onload = () => { initStars(); };
+</script>
+</body>
+</html>

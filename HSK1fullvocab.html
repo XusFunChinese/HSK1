@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, landscape=yes">
+    <title>HSK 1 Complete (150 Words) - XUSFUNCHINESE</title>
+    <style>
+        :root {
+            --primary: #01579b; 
+            --accent: #e1f5fe;  
+            --gold: #fbc02d;
+            --pinyin: #d0021b; 
+            --night-sky: radial-gradient(circle at center, #001f3f 0%, #000510 100%);
+        }
+        
+        body { 
+            margin: 0; font-family: "Arial Black", "Segoe UI", Tahoma, sans-serif; 
+            background: linear-gradient(135deg, #0277bd 0%, #002f6c 100%); 
+            height: 100vh; display: flex; flex-direction: column; overflow: hidden; position: relative;
+        }
+
+        #cover-page {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--night-sky); z-index: 5000; display: flex;
+            flex-direction: column; justify-content: center; align-items: center;
+            cursor: pointer; transition: opacity 0.8s ease-out, visibility 0.8s; overflow: hidden;
+        }
+
+        .star {
+            position: absolute; top: 50%; left: 50%; width: 2px; height: 2px;
+            background: white; border-radius: 50%; box-shadow: 0 0 10px #fff;
+            animation: shoot linear infinite;
+        }
+
+        @keyframes shoot {
+            0% { transform: translate(-50%, -50%) rotate(var(--angle)) translateX(0); opacity: 1; }
+            100% { transform: translate(-50%, -50%) rotate(var(--angle)) translateX(1000px); opacity: 0; width: 160px; }
+        }
+
+        .cover-content { text-align: center; z-index: 10; padding: 20px; }
+        .cover-title { font-size: 10vw; color: var(--gold); line-height: 1.1; margin: 0; font-weight: 900; text-shadow: 0 0 30px rgba(251,192,45,0.8), 0 0 60px rgba(251,192,45,0.4); animation: glow 2s infinite alternate; }
+        .cover-subtitle { font-size: 7vw; color: white; margin-top: 5px; font-weight: 900; }
+        @keyframes glow { from { transform: scale(1); } to { transform: scale(1.05); } }
+
+        header { 
+            background: rgba(255,255,255,0.95); padding: 10px 20px; 
+            display: flex; justify-content: space-between; align-items: center; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 100; 
+        }
+        .nav-btns button { 
+            padding: 8px 12px; margin-right: 5px; border-radius: 20px; border: 2px solid var(--primary); 
+            cursor: pointer; font-weight: bold; background: white; color: var(--primary);
+        }
+        .active-mode { background: var(--primary) !important; color: white !important; }
+
+        main { flex: 1; display: flex; padding: 20px; gap: 15px; overflow: hidden; }
+        #left-panel { flex: 1; background: rgba(255,255,255,0.95); border-radius: 30px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 4px solid var(--accent); }
+        #right-panel { flex: 1.6; background: rgba(255,255,255,0.95); border-radius: 30px; padding: 30px; display: flex; flex-direction: column; overflow-y: auto; border: 4px solid var(--accent); position: relative; }
+
+        ruby { ruby-align: center; font-size: 50px; margin: 0 4px; line-height: 2.2; font-weight: 600; }
+        rt { font-size: 20px; color: var(--pinyin); font-weight: bold; }
+        .eng-hint { display: block; font-size: 26px; color: #333; margin-top: 15px; border-top: 2px dashed #ccc; padding-top: 10px; }
+        #emoji-display { font-size: 130px; margin-bottom: 20px; }
+        
+        .option-btn { background: white; border: 2px solid var(--primary); padding: 15px; margin: 8px 0; border-radius: 15px; cursor: pointer; font-size: 20px; width: 100%; transition: 0.2s; }
+        
+        #scroll-view { display: none; width: 100%; overflow-y: auto; padding: 30px; background: white; border-radius: 30px; }
+        .list-row { border-bottom: 1px solid var(--accent); padding: 15px; cursor: pointer; display: flex; align-items: center; transition: background 0.2s; }
+        .list-row:hover { background: var(--accent); }
+        .hidden { display: none !important; }
+        #timer-display { font-size: 24px; color: #d32f2f; font-weight: bold; margin-right: 15px; }
+    </style>
+</head>
+<body>
+
+<div id="cover-page" onclick="enterApp()">
+    <div id="star-container"></div>
+    <div class="cover-content">
+        <h1 class="cover-title">HSK 1</h1>
+        <div class="cover-subtitle">Complete 150 Words</div>
+        <div style="color:white; margin-top:20px; letter-spacing:3px;">CLICK TO START</div>
+    </div>
+</div>
+
+<header>
+    <div class="nav-btns">
+        <button onclick="setMode('study')" id="btn-study">📖 Learn</button>
+        <button onclick="setMode('review')" id="btn-review">🔄 Review</button>
+        <button onclick="setMode('quiz')" id="btn-quiz">⚡ Quiz</button>
+        <button onclick="setMode('rush')" id="btn-rush">🔥 Rush</button>
+        <button onclick="setMode('mistakes')" id="btn-mistakes">❌ Mistakes</button>
+        <button onclick="setMode('list')" id="btn-list">📜 List</button>
+    </div>
+    <div style="display: flex; align-items: center;">
+        <span id="timer-display" class="hidden">00:30</span>
+        <span style="font-weight: bold; color: var(--primary);">Score: <span id="score-val">0</span></span>
+    </div>
+</header>
+
+<main>
+    <div id="main-ui" style="display: flex; width: 100%; gap: 15px;">
+        <div id="left-panel">
+            <div id="emoji-display">✨</div>
+            <button onclick="speakItem(true)" style="padding: 15px 40px; border-radius: 50px; cursor: pointer; background: var(--primary); color: white; border: none; font-weight: bold; font-size: 20px;">🔊 Play Sound</button>
+        </div>
+        <div id="right-panel">
+            <div id="display-area"></div>
+            <div id="hint-box" style="margin-top:20px; padding:15px; background:#fffde7; border-left:8px solid var(--gold); border-radius:12px; cursor:pointer;" class="hidden" onclick="speakExample()"></div>
+            <div id="interaction-area" style="margin-top: 15px;"></div>
+        </div>
+    </div>
+    <div id="scroll-view"></div>
+</main>
+
+<script>
+    const database = [
+        ["我", "wǒ", "I / me", "🙋‍♂️", {cn: "我是老师。", py: "wǒ shì lǎo shī", en: "I am a teacher."}],
+        ["你", "nǐ", "you", "👤", {cn: "你好！", py: "nǐ hǎo", en: "Hello!"}],
+        ["他", "tā", "he", "👨", {cn: "他是学生。", py: "tā shì xué sheng", en: "He is a student."}],
+        ["她", "tā", "she", "👩", {cn: "她是我的朋友。", py: "tā shì wǒ de péng you", en: "She is my friend."}],
+        ["我们", "wǒ men", "we", "👥", {cn: "我们去学校。", py: "wǒ men qù xué xiào", en: "We go to school."}],
+        ["好", "hǎo", "good", "👍", {cn: "很好。", py: "hěn hǎo", en: "Very good."}],
+        ["是", "shì", "to be", "✅", {cn: "你是谁？", py: "nǐ shì shéi", en: "Who are you?"}],
+        ["不", "bù", "not", "❌", {cn: "我不去。", py: "wǒ bú qù", en: "I'm not going."}],
+        ["谢谢", "xiè xie", "thanks", "🙏", {cn: "谢谢你。", py: "xiè xie nǐ", en: "Thank you."}],
+        ["再见", "zài jiàn", "goodbye", "👋", {cn: "再见！", py: "zài jiàn", en: "Goodbye!"}],
+        ["请", "qǐng", "please", "🙇", {cn: "请坐。", py: "qǐng zuò", en: "Please sit down."}],
+        ["对不起", "duì bu qǐ", "sorry", "🙇‍♂️", {cn: "对不起。", py: "duì bu qǐ", en: "I am sorry."}],
+        ["老师", "lǎo shī", "teacher", "👨‍🏫", {cn: "老师好！", py: "lǎo shī hǎo", en: "Hello teacher!"}],
+        ["学生", "xué sheng", "student", "🧑‍🎓", {cn: "他是学生。", py: "tā shì xué sheng", en: "He is a student."}],
+        ["朋友", "péng you", "friend", "👫", {cn: "我的朋友。", py: "wǒ de péng you", en: "My friend."}],
+        ["医生", "yī shēng", "doctor", "👨‍⚕️", {cn: "他是医生。", py: "tā shì yī shēng", en: "He is a doctor."}],
+        ["家", "jiā", "home", "🏠", {cn: "我回家。", py: "wǒ huí jiā", en: "I go home."}],
+        ["学校", "xué xiào", "school", "🏫", {cn: "我去学校。", py: "wǒ qù xué xiào", en: "I go to school."}],
+        ["商店", "shāng diàn", "shop", "🛒", {cn: "商店在那儿。", py: "shāng diàn zài nà r", en: "The shop is there."}],
+        ["现在", "xiàn zài", "now", "⏰", {cn: "现在几点？", py: "xiàn zài jǐ diǎn", en: "What time is it now?"}],
+        ["今天", "jīn tiān", "today", "📅", {cn: "今天星期一。", py: "jīn tiān xīng qī yī", en: "Today is Monday."}],
+        ["昨天", "zuó tiān", "yesterday", "⏪", {cn: "昨天是几号？", py: "zuó tiān shì jǐ hào", en: "What date was yesterday?"}],
+        ["明天", "míng tiān", "tomorrow", "⏩", {cn: "明天见。", py: "míng tiān jiàn", en: "See you tomorrow."}],
+        ["年", "nián", "year", "🗓️", {cn: "今年是哪年？", py: "jīn nián shì nǎ nián", en: "What year is this year?"}],
+        ["月", "yuè", "month", "🌙", {cn: "一月一号。", py: "yī yuè yī hào", en: "January 1st."}],
+        ["号", "hào", "date", "🔢", {cn: "今天三号。", py: "jīn tiān sān hào", en: "Today is the 3rd."}],
+        ["点", "diǎn", "o'clock", "🕒", {cn: "下午三点。", py: "xià wǔ sān diǎn", en: "3 PM."}],
+        ["分钟", "fēn zhōng", "minute", "⏱️", {cn: "五分钟。", py: "wǔ fēn zhōng", en: "Five minutes."}],
+        ["钱", "qián", "money", "💰", {cn: "多少钱？", py: "duō shao qián", en: "How much money?"}],
+        ["水", "shuǐ", "water", "💧", {cn: "喝水。", py: "hē shuǐ", en: "Drink water."}],
+        ["茶", "chá", "tea", "🍵", {cn: "我想喝茶。", py: "wǒ xiǎng hē chá", en: "I want to drink tea."}],
+        ["水果", "shuǐ guǒ", "fruit", "🍎", {cn: "吃水果。", py: "chī shuǐ guǒ", en: "Eat fruit."}],
+        ["苹果", "píng guǒ", "apple", "🍏", {cn: "买苹果。", py: "mǎi píng guǒ", en: "Buy apples."}],
+        ["杯子", "bēi zi", "cup", "🥛", {cn: "这是我的杯子。", py: "zhè shì wǒ de bēi zi", en: "This is my cup."}],
+        ["书", "shū", "book", "📖", {cn: "看书。", py: "kàn shū", en: "Read a book."}],
+        ["椅子", "yǐ zi", "chair", "🪑", {cn: "桌子和椅子。", py: "zhuō zi hé yǐ zi", en: "Table and chair."}],
+        ["桌子", "zhuō zi", "table", "🍱", {cn: "桌子上有书。", py: "zhuō zi shang yǒu shū", en: "There's a book on the table."}],
+        ["猫", "māo", "cat", "🐱", {cn: "小猫。", py: "xiǎo māo", en: "Little cat."}],
+        ["狗", "gǒu", "dog", "🐶", {cn: "一只小狗。", py: "yì zhī xiǎo gǒu", en: "A little dog."}],
+        ["北京", "běi jīng", "Beijing", "🏙️", {cn: "他在北京。", py: "tā zài běi jīng", en: "He is in Beijing."}],
+        ["看", "kàn", "look", "👁️", {cn: "看电视。", py: "kàn diàn shì", en: "Watch TV."}],
+        ["听", "tīng", "listen", "👂", {cn: "听音乐。", py: "tīng yīn yuè", en: "Listen to music."}],
+        ["说话", "shuō huà", "speak", "💬", {cn: "他在说话。", py: "tā zài shuō huà", en: "He is speaking."}],
+        ["读", "dú", "read", "📚", {cn: "读汉语。", py: "dú hàn yǔ", en: "Read Chinese."}],
+        ["写", "xiě", "write", "✍️", {cn: "写汉字。", py: "xiě hàn zì", en: "Write Chinese characters."}],
+        ["喝", "hē", "drink", "🍹", {cn: "喝点儿水。", py: "hē diǎnr shuǐ", en: "Drink some water."}],
+        ["吃", "chī", "eat", "🍱", {cn: "吃米饭。", py: "chī mǐ fàn", en: "Eat rice."}],
+        ["开", "kāi", "drive / open", "🚗", {cn: "开车。", py: "kāi chē", en: "Drive a car."}],
+        ["坐", "zuò", "sit", "🧎", {cn: "坐车。", py: "zuò chē", en: "Take a bus/car."}],
+        ["买", "mǎi", "buy", "🛍️", {cn: "买衣服。", py: "mǎi yī fu", en: "Buy clothes."}],
+        ["想", "xiǎng", "want / think", "💭", {cn: "我想去北京。", py: "wǒ xiǎng qù běi jīng", en: "I want to go to Beijing."}],
+        ["说", "shuō", "speak / say", "🗣️", {cn: "请说汉语。", py: "qǐng shuō hàn yǔ", en: "Please speak Chinese."}],
+        ["看", "kàn", "look / watch", "👁️", {cn: "我看书。", py: "wǒ kàn shū", en: "I read a book."}],
+        ["听", "tīng", "listen", "👂", {cn: "听音乐。", py: "tīng yīn yuè", en: "Listen to music."}],
+        ["读", "dú", "read", "📖", {cn: "读汉语。", py: "dú hàn yǔ", en: "Read Chinese."}],
+        ["写", "xiě", "write", "✍️", {cn: "写汉字。", py: "xiě hàn zì", en: "Write Chinese characters."}],
+        ["叫", "jiào", "be called", "🏷️", {cn: "你叫什么名字？", py: "nǐ jiào shén me míng zi", en: "What is your name?"}],
+        ["来", "lái", "come", "🏃", {cn: "他来学校了。", py: "tā lái xué xiào le", en: "He came to school."}],
+        ["回", "huí", "return", "↩️", {cn: "我回家。", py: "wǒ huí jiā", en: "I go home."}],
+        ["去", "qù", "go", "🚶", {cn: "我去商店。", py: "wǒ qù shāng diàn", en: "I go to the shop."}],
+        ["爱", "ài", "love", "❤️", {cn: "我爱我的家。", py: "wǒ ài wǒ de jiā", en: "I love my family."}],
+        ["吃", "chī", "eat", "🥢", {cn: "吃米饭。", py: "chī mǐ fàn", en: "Eat rice."}],
+        ["喝", "hē", "drink", "🍵", {cn: "喝点儿水。", py: "hē diǎnr shuǐ", en: "Drink some water."}],
+        ["睡觉", "shuì jiào", "sleep", "😴", {cn: "我要睡觉。", py: "wǒ yào shuì jiào", en: "I want to sleep."}],
+        ["打电话", "dǎ diàn huà", "make a call", "📞", {cn: "他在打电话。", py: "tā zài dǎ diàn huà", en: "He is making a phone call."}],
+        ["做", "zuò", "do / make", "🛠️", {cn: "做饭。", py: "zuò fàn", en: "Cook food."}],
+        ["买", "mǎi", "buy", "🛍️", {cn: "买衣服。", py: "mǎi yī fu", en: "Buy clothes."}],
+        ["开", "kāi", "open / drive", "🚗", {cn: "开车。", py: "kāi chē", en: "Drive a car."}],
+        ["坐", "zuò", "sit", "🪑", {cn: "请坐。", py: "qǐng zuò", en: "Please sit down."}],
+        ["住", "zhù", "live", "🏠", {cn: "你住在哪儿？", py: "nǐ zhù zài nǎ r", en: "Where do you live?"}],
+        ["学习", "xué xí", "study", "📚", {cn: "学习汉语。", py: "xué xí hàn yǔ", en: "Study Chinese."}],
+        ["工作", "gōng zuò", "work", "💼", {cn: "他在工作。", py: "tā zài gōng zuò", en: "He is working."}],
+        ["下雨", "xià yǔ", "rain", "🌧️", {cn: "下雨了。", py: "xià yǔ le", en: "It's raining."}],
+        ["认识", "rèn shi", "know (people)", "🤝", {cn: "认识你很高兴。", py: "rèn shi nǐ hěn gāo xìng", en: "Glad to meet you."}],
+        ["大", "dà", "big", "🐘", {cn: "这个苹果很大。", py: "zhè ge píng guǒ hěn dà", en: "This apple is big."}],
+        ["小", "xiǎo", "small", "🐭", {cn: "小猫。", py: "xiǎo māo", en: "Little cat."}],
+        ["多", "duō", "many", "🔢", {cn: "这里人很多。", py: "zhè lǐ rén hěn duō", en: "There are many people here."}],
+        ["少", "shǎo", "few", "🤏", {cn: "钱很少。", py: "qián hěn shǎo", en: "Very little money."}],
+        ["冷", "lěng", "cold", "❄️", {cn: "今天很冷。", py: "jīn tiān hěn lěng", en: "Today is cold."}],
+        ["热", "rè", "hot", "☀️", {cn: "今天很热。", py: "jīn tiān hěn rè", en: "Today is hot."}],
+        ["高兴", "gāo xìng", "happy", "😊", {cn: "我很高兴。", py: "wǒ hěn gāo xìng", en: "I am happy."}],
+        ["漂亮", "piào liang", "beautiful", "💅", {cn: "衣服很漂亮。", py: "yī fu hěn piào liang", en: "The clothes are beautiful."}],
+        ["桌子", "zhuō zi", "table", "🍱", {cn: "桌子上有书。", py: "zhuō zi shang yǒu shū", en: "Book on the table."}],
+        ["椅子", "yǐ zi", "chair", "🪑", {cn: "坐在椅子上。", py: "zuò zài yǐ zi shang", en: "Sit on the chair."}],
+        ["杯子", "bēi zi", "cup", "🥛", {cn: "一个杯子。", py: "yí ge bēi zi", en: "A cup."}],
+        ["电脑", "diàn nǎo", "computer", "💻", {cn: "这是我的电脑。", py: "zhè shì wǒ de diàn nǎo", en: "This is my computer."}],
+        ["电视", "diàn shì", "TV", "📺", {cn: "看电视。", py: "kàn diàn shì", en: "Watch TV."}],
+        ["电影", "diàn yǐng", "movie", "🎬", {cn: "看电影。", py: "kàn diàn yǐng", en: "Watch a movie."}],
+        ["天气", "tiān qì", "weather", "🌤️", {cn: "天气很好。", py: "tiān qì hěn hǎo", en: "The weather is good."}],
+        ["猫", "māo", "cat", "🐱", {cn: "我喜欢猫。", py: "wǒ xǐ huan māo", en: "I like cats."}],
+        ["狗", "gǒu", "dog", "🐶", {cn: "一只小狗。", py: "yì zhī xiǎo gǒu", en: "A little dog."}],
+        ["东西", "dōng xi", "thing", "📦", {cn: "买东西。", py: "mǎi dōng xi", en: "Buy things."}],
+        ["米饭", "mǐ fàn", "rice", "🍚", {cn: "吃米饭。", py: "chī mǐ fàn", en: "Eat rice."}],
+        ["水果", "shuǐ guǒ", "fruit", "🍎", {cn: "买水果。", py: "mǎi shuǐ guǒ", en: "Buy fruit."}],
+        ["苹果", "píng guǒ", "apple", "🍏", {cn: "大苹果。", py: "dà píng guǒ", en: "Big apple."}],
+        ["茶", "chá", "tea", "🍵", {cn: "喝茶。", py: "hē chá", en: "Drink tea."}],
+        ["菜", "cài", "dish / vegetable", "🥗", {cn: "中国菜。", py: "zhōng guó cài", en: "Chinese food."}],
+        ["衣服", "yī fu", "clothes", "👕", {cn: "漂亮衣服。", py: "yī fu hěn piào liang", en: "Beautiful clothes."}],
+        ["水", "shuǐ", "water", "💧", {cn: "喝水。", py: "hē shuǐ", en: "Drink water."}],
+        ["汉语", "hàn yǔ", "Chinese language", "🇨🇳", {cn: "说汉语。", py: "shuō hàn yǔ", en: "Speak Chinese."}],
+        ["名字", "míng zi", "name", "📛", {cn: "你的名字。", py: "nǐ de míng zi", en: "Your name."}],
+        ["字", "zì", "character", "🔣", {cn: "这个字。", py: "zhè ge zì", en: "This character."}],
+        ["钱", "qián", "money", "💰", {cn: "多少钱？", py: "duō shao qián", en: "How much money?"}],
+        ["什么", "shén me", "what", "❓", {cn: "是什么？", py: "shì shén me", en: "What is it?"}],
+        ["多少", "duō shao", "how many", "🔢", {cn: "多少人？", py: "duō shao rén", en: "How many people?"}],
+        ["几", "jǐ", "how many (<10)", "🔢", {cn: "几点？", py: "jǐ diǎn", en: "What time?"}],
+        ["怎么", "zěn me", "how", "🤔", {cn: "怎么去？", py: "zěn me qù", en: "How to go?"}],
+        ["怎么样", "zěn me yàng", "how about", "🧐", {cn: "天气怎么样？", py: "tiān qì zěn me yàng", en: "How is the weather?"}],
+        ["谁", "shéi", "who", "👤", {cn: "他是谁？", py: "tā shì shéi", en: "Who is he?"}],
+        ["在哪儿", "zài nǎ r", "where", "📍", {cn: "你在哪儿？", py: "nǐ zài nǎ r", en: "Where are you?"}],
+        ["这", "zhè", "this", "👈", {cn: "这是书。", py: "zhè shì shū", en: "This is a book."}],
+        ["那", "nà", "that", "👉", {cn: "那是谁？", py: "nà shì shéi", en: "Who is that?"}],
+        ["哪", "nǎ", "which", "🚩", {cn: "哪个人？", py: "nǎ ge rén", en: "Which person?"}],
+        ["这里", "zhè lǐ", "here", "⬇️", {cn: "在这里。", py: "zài zhè lǐ", en: "It's here."}],
+        ["那里", "nà lǐ", "there", "↗️", {cn: "在外面那里。", py: "zài nà lǐ", en: "It's over there."}],
+        ["没关系", "méi guān xi", "it's okay", "👌", {cn: "没关系。", py: "méi guān xi", en: "It doesn't matter."}],
+        ["不客气", "bú kè qi", "you're welcome", "😊", {cn: "不客气。", py: "bú kè qi", en: "You're welcome."}],
+        ["谢谢", "xiè xie", "thanks", "🙏", {cn: "谢谢老师。", py: "xiè xie lǎo shī", en: "Thanks teacher."}],
+        ["再见", "zài jiàn", "goodbye", "👋", {cn: "再见！", py: "zài jiàn", en: "Goodbye!"}],
+        ["请", "qǐng", "please", "🙇", {cn: "请坐。", py: "qǐng zuò", en: "Please sit down."}],
+        ["对不起", "duì bu qǐ", "sorry", "🙇‍♂️", {cn: "对不起。", py: "duì bu qǐ", en: "I am sorry."}],
+        ["吗", "ma", "question particle", "❔", {cn: "好吗？", py: "hǎo ma", en: "Okay?"}],
+        ["呢", "ne", "particle", "❓", {cn: "你呢？", py: "nǐ ne", en: "And you?"}],
+        ["太", "tài", "too / very", "❗", {cn: "太好了！", py: "tài hǎo le", en: "That's great!"}],
+        ["很", "hěn", "very", "⬆️", {cn: "很大。", py: "hěn dà", en: "Very big."}],
+        ["都", "dōu", "all", "♾️", {cn: "我们都去。", py: "wǒ men dōu qù", en: "We all go."}],
+        ["和", "hé", "and", "➕", {cn: "我和你。", py: "wǒ hé nǐ", en: "Me and you."}],
+        ["在", "zài", "at / in", "📌", {cn: "他在家。", py: "tā zài jiā", en: "He is at home."}],
+        ["的", "de", "possessive", "📎", {cn: "我的书。", py: "wǒ de shū", en: "My book."}],
+        ["了", "le", "completion", "🏁", {cn: "我吃饭了。", py: "wǒ chī fàn le", en: "I ate."}],
+        ["喂", "wéi", "hello (phone)", "📞", {cn: "喂，你好。", py: "wéi, nǐ hǎo", en: "Hello?"}],
+        ["医生", "yī shēng", "doctor", "👨‍⚕️", {cn: "他是医生。", py: "tā shì yī shēng", en: "He is a doctor."}],
+        ["医院", "yī yuàn", "hospital", "🏥", {cn: "他在医院。", py: "tā zài yī yuàn", en: "He is in the hospital."}],
+        ["北京", "běi jīng", "Beijing", "🏙️", {cn: "我在北京。", py: "wǒ zài běi jīng", en: "I am in Beijing."}],
+        ["中国", "zhōng guó", "China", "🇨🇳", {cn: "中国菜。", py: "zhōng guó cài", en: "Chinese food."}],
+        ["里", "lǐ", "inside", "📦", {cn: "家里。", py: "jiā lǐ", en: "Inside the home."}],
+        ["上", "shàng", "up / on", "⬆️", {cn: "桌子上。", py: "zhuō zi shang", en: "On the table."}],
+        ["下", "xià", "down / under", "⬇️", {cn: "桌子下。", py: "zhuō zi xià", en: "Under the table."}],
+        ["前", "qián", "front", "前进", {cn: "前面。", py: "qián miàn", en: "In front."}],
+        ["后", "hòu", "back / behind", "⬅️", {cn: "后面。", py: "hòu miàn", en: "Behind."}],
+        ["一个", "yí ge", "one piece", "1️⃣", {cn: "一个杯子。", py: "yí ge bēi zi", en: "A cup."}],
+        ["一些", "yì xiē", "some", "🔢", {cn: "一些苹果。", py: "yì xiē píng guǒ", en: "Some apples."}],
+        ["分钟", "fēn zhōng", "minute", "⏱️", {cn: "五分钟。", py: "wǔ fēn zhōng", en: "Five minutes."}],
+        ["现在", "xiàn zài", "now", "⏰", {cn: "现在三点。", py: "xiàn zài sān diǎn", en: "It's 3 o'clock now."}],
+        ["今天", "jīn tiān", "today", "📅", {cn: "今天星期一。", py: "jīn tiān xīng qī yī", en: "Today is Monday."}],
+        ["昨天", "zuó tiān", "yesterday", "⏪", {cn: "昨天几号？", py: "zuó tiān jǐ hào", en: "What date was yesterday?"}],
+        ["明天", "míng tiān", "tomorrow", "⏩", {cn: "明天见。", py: "míng tiān jiàn", en: "See you tomorrow."}],
+        ["星期", "xīng qī", "week", "🗓️", {cn: "星期五。", py: "xīng qī wǔ", en: "Friday."}],
+        ["点", "diǎn", "o'clock", "🕒", {cn: "十点。", py: "shí diǎn", en: "10 o'clock."}]
+    ];
+
+    let currentMode = 'study', currentIndex = 0, score = 0, timer = null, timeLeft = 30;
+    let mistakes = [];  // [{index: number, isSentence: boolean, isEnToCn: boolean}]
+
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playEffect(type) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        if(type === 'win') {
+            osc.frequency.setValueAtTime(987, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1318, audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        } else {
+            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+            osc.frequency.linearRampToValueAtTime(110, audioCtx.currentTime + 0.2);
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        }
+        osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+    }
+
+    function initStars() {
+        const container = document.getElementById('star-container');
+        for(let i=0; i<100; i++) {
+            let s = document.createElement('div'); s.className = 'star';
+            s.style.setProperty('--angle', Math.random() * 360 + 'deg');
+            s.style.animationDuration = Math.random() * 1.5 + 0.8 + 's';
+            container.appendChild(s);
+        }
+    }
+
+    function enterApp() {
+        document.getElementById('cover-page').style.opacity = '0';
+        setTimeout(() => { document.getElementById('cover-page').style.visibility = 'hidden'; }, 800);
+        setMode('study');
+    }
+
+    function speakText(text, callback = null) {
+        window.speechSynthesis.cancel();
+        const m = new SpeechSynthesisUtterance(text);
+        m.lang = 'zh-CN'; m.rate = 0.85;
+        if (callback) m.onend = callback;
+        window.speechSynthesis.speak(m);
+    }
+
+    function speakItem(withExample = false) {
+        const itemIndex = currentMode === 'mistakes' ? mistakes[currentIndex].index : currentIndex;
+        const item = database[itemIndex];
+        if (withExample) speakText(item[0], () => setTimeout(() => speakText(item[4].cn), 400));
+        else speakText(item[0]);
+    }
+
+    function speakExample() {
+        const itemIndex = currentMode === 'mistakes' ? mistakes[currentIndex].index : currentIndex;
+        const item = database[itemIndex];
+        speakText(item[4].cn);
+    }
+
+    function setMode(m, jumpIndex = 0) {
+        currentMode = m; 
+        currentIndex = jumpIndex; 
+        clearInterval(timer);
+        document.querySelectorAll('.nav-btns button').forEach(b => b.classList.remove('active-mode'));
+        if(document.getElementById('btn-'+m)) document.getElementById('btn-'+m).classList.add('active-mode');
+        document.getElementById('timer-display').classList.add('hidden');
+        score = 0;
+        document.getElementById('score-val').innerText = "0";
+
+        if (m === 'rush') {
+            timeLeft = 30;
+            document.getElementById('timer-display').classList.remove('hidden');
+            timer = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer-display').innerText = `00:${timeLeft < 10 ? '0'+timeLeft : timeLeft}`;
+                if (timeLeft <= 0) { 
+                    clearInterval(timer); 
+                    const praises = ["时间到！", "不错哦！"];
+                    speakText(praises[Math.floor(Math.random()*praises.length)]);
+                    setMode('study'); 
+                }
+            }, 1000);
+        }
+
+        if(m === 'list') {
+            document.getElementById('main-ui').classList.add('hidden');
+            document.getElementById('scroll-view').style.display = 'block';
+            renderList();
+        } else {
+            document.getElementById('main-ui').classList.remove('hidden');
+            document.getElementById('scroll-view').style.display = 'none';
+            render();
+        }
+    }
+
+    function generateRubyHtml(text, pinyinStr) {
+        const chars = text.split('');
+        const pys = pinyinStr.split(' ');
+        let html = "";
+        let pyIdx = 0;
+        chars.forEach(c => {
+            if(/[\u4e00-\u9fa5]/.test(c)) {
+                html += `<ruby>${c}<rt>${pys[pyIdx] || ''}</rt></ruby>`;
+                pyIdx++;
+            } else {
+                html += c;
+            }
+        });
+        return html;
+    }
+
+    function render() {
+        const display = document.getElementById('display-area');
+        const interaction = document.getElementById('interaction-area');
+        const hint = document.getElementById('hint-box');
+        display.innerHTML = ""; interaction.innerHTML = ""; hint.classList.add('hidden');
+
+        if (currentMode === 'mistakes' && mistakes.length === 0) {
+            display.innerHTML = "<h2 style='text-align:center; color:#d32f2f;'>错题本为空！</h2>";
+            interaction.innerHTML = `<button class="option-btn" onclick="setMode('study')" style="background:var(--primary); color:white;">返回学习模式</button>`;
+            document.getElementById('emoji-display').innerText = "📭";
+            return;
+        }
+
+        const itemIndex = currentMode === 'mistakes' ? mistakes[currentIndex].index : currentIndex;
+        const item = database[itemIndex];
+        document.getElementById('emoji-display').innerText = item[3];
+
+        if (currentMode === 'study') {
+            display.innerHTML = generateRubyHtml(item[0], item[1]) + `<span class="eng-hint">${item[2]}</span>`;
+            hint.innerHTML = `<div style="font-size:26px;">${generateRubyHtml(item[4].cn, item[4].py)}</div><div style="font-style:italic; color:#666;">${item[4].en}</div><div style="font-size:12px; color:#999; margin-top:5px; text-align:right;">🔊 点击朗读例句</div>`;
+            hint.classList.remove('hidden');
+            interaction.innerHTML = `<button class="option-btn" onclick="nextCard()">下一张 →</button>`;
+            speakItem(false); 
+        } 
+        else if (currentMode === 'review') {
+            display.innerHTML = `<h1 style="font-size:80px; cursor:pointer;" onclick="revealReview()">${item[0]}</h1>`;
+            interaction.innerHTML = `<p style="text-align:center; color:#888;">点击汉字显示详情</p>`;
+        }
+        else {  // quiz, rush, mistakes
+            let isSentence = Math.random() > 0.5;
+            let isEnToCn = Math.random() > 0.5;
+            if (currentMode === 'mistakes') {
+                isSentence = mistakes[currentIndex].isSentence;
+                isEnToCn = mistakes[currentIndex].isEnToCn;
+            }
+
+            let questText, correctAns, speakTarget;
+            if (isSentence) {
+                questText = isEnToCn ? item[4].en : item[4].cn;  // 问题显示纯文本（带标点）
+                correctAns = isEnToCn ? item[4].cn : item[4].en;
+                speakTarget = item[4].cn;
+            } else {
+                questText = isEnToCn ? item[2] : item[0];
+                correctAns = isEnToCn ? item[0] : item[2];
+                speakTarget = item[0];
+            }
+
+            display.innerHTML = `<h2 style="font-size:36px; text-align:center;">${questText}</h2>`;
+            
+            let choices = [correctAns];
+            while(choices.length < 4) {
+                let r = database[Math.floor(Math.random()*database.length)];
+                let val;
+                if (isSentence) {
+                    val = isEnToCn ? r[4].cn : r[4].en;
+                } else {
+                    val = isEnToCn ? r[0] : r[2];
+                }
+                if(!choices.includes(val)) choices.push(val);
+            }
+            choices.sort(() => Math.random() - 0.5);
+
+            choices.forEach(c => {
+                const b = document.createElement('button'); b.className = 'option-btn'; b.innerText = c;
+                b.onclick = () => {
+                    if(c === correctAns) {
+                        playEffect('win');
+                        speakText(speakTarget);
+                        if (currentMode !== 'mistakes') score += 10;
+                        document.getElementById('score-val').innerText = score;
+                        b.style.background = "#4caf50"; b.style.color = "white"; 
+
+                        if (currentMode === 'mistakes') {
+                            mistakes.splice(currentIndex, 1);
+                            if (mistakes.length === 0) {
+                                setTimeout(() => {
+                                    speakText("错题全部答对！太棒了！");
+                                    setMode('study');
+                                }, 800);
+                                return;
+                            }
+                        }
+                        setTimeout(nextCard, 800);
+                    } else { 
+                        playEffect('fail');
+                        b.style.background = "#f44336"; b.style.color = "white";
+                        if (currentMode !== 'mistakes') {
+                            const newMistake = {index: itemIndex, isSentence, isEnToCn};
+                            if (!mistakes.some(m => m.index === newMistake.index && m.isSentence === newMistake.isSentence && m.isEnToCn === newMistake.isEnToCn)) {
+                                mistakes.push(newMistake);
+                            }
+                        }
+                    }
+                };
+                interaction.appendChild(b);
+            });
+        }
+    }
+
+    function revealReview() {
+        const itemIndex = currentMode === 'mistakes' ? mistakes[currentIndex].index : currentIndex;
+        const item = database[itemIndex];
+        const display = document.getElementById('display-area');
+        const hint = document.getElementById('hint-box');
+        display.innerHTML = generateRubyHtml(item[0], item[1]) + `<span class="eng-hint">${item[2]}</span>`;
+        hint.innerHTML = `<div style="font-size:26px;">${generateRubyHtml(item[4].cn, item[4].py)}</div><div style="font-style:italic; color:#666;">${item[4].en}</div><div style="font-size:12px; color:#999; margin-top:5px; text-align:right;">🔊 点击朗读例句</div>`;
+        hint.classList.remove('hidden');
+        speakItem(true);
+        document.getElementById('interaction-area').innerHTML = `<button class="option-btn" onclick="nextCard()">下一张 →</button>`;
+    }
+
+    function nextCard() {
+        if (currentMode === 'mistakes') {
+            currentIndex++;
+            if (currentIndex >= mistakes.length) {
+                setMode('study');
+                return;
+            }
+        } else {
+            currentIndex++;
+            if (currentIndex >= database.length) {
+                currentIndex = 0;
+                const praises = ["一轮完成！太棒了！", "你真厉害！", "继续加油！"];
+                speakText(praises[Math.floor(Math.random()*praises.length)]);
+            }
+        }
+        render();
+    }
+
+    function renderList() {
+        const view = document.getElementById('scroll-view');
+        view.innerHTML = "<h2>📜 HSK 1 完整词汇表 (150词)</h2><p style='color:#666;'>点击任意行直接学习该词</p>";
+        database.forEach((it, idx) => {
+            const r = document.createElement('div'); r.className = 'list-row';
+            r.innerHTML = `<div style="min-width:40px; color:#999;">${idx+1}</div>
+                <div style="font-size:32px; margin-right:15px;">${it[3]}</div>
+                <div style="flex:1;"><b>${it[0]}</b> <span style="color:var(--pinyin);">[${it[1]}]</span><br><small>${it[2]}</small></div>`;
+            r.onclick = () => { setMode('study', idx); };
+            view.appendChild(r);
+        });
+    }
+
+    window.onload = () => { initStars(); };
+</script>
+</body>
+</html>
