@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HSK 1 Reading Logic 100 - XUSFUNCHINESE</title>
+    <style>
+        :root {
+            --primary: #01579b; --gold: #fbc02d; --pinyin-red: #d63031;
+            --night-sky: radial-gradient(circle at center, #001f3f 0%, #000510 100%);
+            --glass: rgba(255, 255, 255, 0.15);
+        }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: "Arial Black", sans-serif; overflow: hidden; background: var(--night-sky); color: white; }
+        
+        ruby { ruby-align: center; }
+        rt { font-family: Arial, sans-serif; font-size: 0.45em; color: var(--gold); font-weight: normal; margin-bottom: 2px; }
+
+        #cover-page { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--night-sky); z-index: 5000; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 0.8s; text-align: center; }
+        .cover-title { font-size: 32px; color: var(--gold); margin-bottom: 10px; text-shadow: 0 0 15px rgba(251,192,45,0.5); }
+        .mode-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 0 15px; width: 95%; max-width: 500px; }
+        .mode-btn { padding: 12px; background: transparent; border: 2px solid var(--gold); color: white; border-radius: 12px; cursor: pointer; transition: 0.3s; display: flex; flex-direction: column; align-items: center; }
+        .mode-btn b { font-size: 14px; margin-bottom: 4px; }
+        .mode-btn span { font-size: 11px; opacity: 0.8; font-family: sans-serif; }
+        .mode-btn:hover { background: var(--gold); color: #000; }
+        
+        #app { display: none; height: 100vh; flex-direction: column; padding: 10px; box-sizing: border-box; }
+        .nav-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .progress-bar { flex-grow: 1; height: 8px; background: rgba(255,255,255,0.2); margin: 0 10px; border-radius: 4px; overflow: hidden; }
+        #progress-fill { height: 100%; width: 0%; background: var(--gold); transition: 0.3s; }
+        
+        .content-card { background: var(--glass); backdrop-filter: blur(20px); border-radius: 20px; flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; border: 1px solid rgba(255,255,255,0.1); text-align: center; }
+        #reading-text { font-size: 22px; line-height: 2.6; margin-bottom: 20px; max-width: 95%; }
+        #sub-text { font-size: 20px; line-height: 2.6; color: #fff; margin-top: 15px; border-top: 2px dashed rgba(255,255,255,0.2); padding-top: 15px; width: 85%; }
+        
+        .option-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; width: 100%; max-width: 600px; margin-top: 10px; }
+        .opt-item { background: white; color: #001f3f; padding: 15px; border-radius: 15px; font-size: 18px; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .opt-img { font-size: 45px; }
+
+        .overlay-view { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #001122; z-index: 6000; display: none; padding: 20px; box-sizing: border-box; }
+        .scroll-area { height: 85%; overflow-y: auto; margin-top: 15px; }
+        .list-item { padding: 15px; border-bottom: 1px solid #333; color: white; cursor: pointer; line-height: 1.8; }
+        .list-item:active { background: #01579b; }
+
+        #summary-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--night-sky); z-index: 8000; display: none; flex-direction: column; justify-content: center; align-items: center; }
+        #feedback-pop { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 120px; display: none; z-index: 9000; pointer-events: none; }
+    </style>
+</head>
+<body>
+
+<div id="cover-page">
+    <div style="font-size: 50px; margin-bottom: 10px;">🏮</div>
+    <h1 class="cover-title">HSK 1 READING 100<br><small style="font-size:16px; opacity:0.8; font-family:sans-serif;">Full Reading Modules with Pinyin</small></h1>
+    <div class="mode-grid">
+        <button class="mode-btn" onclick="startApp(0)">
+            <b>Part 1: Vocabulary</b>
+            <span>Word-Image matching</span>
+        </button>
+        <button class="mode-btn" onclick="startApp(20)">
+            <b>Part 2: Sentences</b>
+            <span>Match sentences to pictures</span>
+        </button>
+        <button class="mode-btn" onclick="startApp(40)">
+            <b>Part 3: Dialogues</b>
+            <span>Conversation pairing</span>
+        </button>
+        <button class="mode-btn" onclick="startApp(60)">
+            <b>Part 4: Cloze</b>
+            <span>Fill in the missing words</span>
+        </button>
+        <button class="mode-btn" onclick="startApp(80)" style="grid-column: span 2; border-color: #4cd137;">
+            <b>Part 5: Logic Reasoning</b>
+            <span>Deep reading comprehension</span>
+        </button>
+    </div>
+    <button class="mode-btn" style="margin-top:15px; width: 220px; border-color: #fff;" onclick="toggleOverlay('mistake-view', true)">
+        <b>Mistake Book</b>
+        <span>Review failed questions</span>
+    </button>
+</div>
+
+<div id="summary-screen">
+    <h1 style="color:var(--gold); font-size: 40px;">WELL DONE!</h1>
+    <div id="final-score" style="font-size: 80px; color: var(--gold); margin: 20px 0;">0</div>
+    <button class="mode-btn" onclick="location.reload()" style="width: 200px;">Back to Menu</button>
+</div>
+
+<div id="app">
+    <div class="nav-header">
+        <button onclick="exitToCover()" style="background:none; border:1px solid white; color:white; border-radius:8px; padding: 5px 12px; cursor:pointer;">🏠</button>
+        <div class="progress-bar"><div id="progress-fill"></div></div>
+        <button onclick="toggleOverlay('list-view', true)" style="background:none; border:1px solid white; color:white; border-radius:8px; padding: 5px 12px; cursor:pointer;">📜</button>
+    </div>
+    <div class="content-card">
+        <div id="q-mode" style="background:var(--pinyin-red); color:white; padding:2px 10px; border-radius:5px; font-size:12px; margin-bottom:10px; display:none; font-weight:bold;">REVIEWING MISTAKES</div>
+        <div id="q-info" style="color: var(--gold); font-size: 14px; margin-bottom: 10px;">PART</div>
+        <div id="reading-text"></div>
+        <div id="sub-text"></div>
+        <div id="visual-content" style="font-size: 100px; margin-bottom: 10px;"></div>
+        <div class="option-container" id="options-grid"></div>
+    </div>
+</div>
+
+<div id="list-view" class="overlay-view">
+    <h2 style="color:var(--gold)">Question List (Full Content)</h2>
+    <div class="scroll-area" id="list-content"></div>
+    <button class="mode-btn" style="width:100%; margin-top:10px;" onclick="toggleOverlay('list-view', false)">Back</button>
+</div>
+
+<div id="mistake-view" class="overlay-view">
+    <h2 style="color:var(--pinyin-red)">Mistake Book</h2>
+    <div class="scroll-area" id="mistake-content"></div>
+    <button class="mode-btn" style="width:100%; margin-top:10px;" onclick="toggleOverlay('mistake-view', false)">Close</button>
+</div>
+
+<div id="feedback-pop"></div>
+
+<script>
+const pyMap = {"我":"wǒ","你":"nǐ","他":"tā","她":"tā","们":"men","好":"hǎo","是":"shì","不":"bù","有":"yǒu","在":"zài","个":"gè","这":"zhè","那":"nà","哪":"nǎ","谁":"shéi","什":"shén","么":"me","几":"jǐ","岁":"suì","叫":"jiào","名":"míng","字":"zi","喝":"hē","茶":"chá","吃":"chī","米":"mǐ","饭":"fàn","水":"shuǐ","果":"guǒ","苹":"píng","老":"lǎo","师":"shī","学":"xué","生":"shēng","同":"tóng","校":"xiào","医":"yī","院":"yuàn","商":"shāng","店":"diàn","馆":"guǎn","电":"diàn","视":"shì","影":"yǐng","脑":"nǎo","书":"shū","衣":"yī","服":"fú","杯":"bēi","子":"zi","钱":"qián","块":"kuài","飞":"fēi","机":"jī","出":"chū","租":"zū","车":"chē","坐":"zuò","买":"mǎi","看":"kàn","听":"tīng","说":"shuō","读":"dú","写":"xiě","开":"kāi","回":"huí","来":"lái","去":"qù","想":"xiǎng","能":"néng","会":"huì","请":"qǐng","谢":"xiè","客":"kè","气":"qi","对":"duì","起":"qǐ","没":"méi","关":"guān","系":"xi","再":"zài","见":"jiàn","很":"hěn","太":"tài","多":"duō","少":"shǎo","大":"dà","小":"xiǎo","冷":"lěng","热":"rè","昨":"zuó","天":"tiān","今":"jīn","明":"míng","年":"nián","月":"yuè","日":"rì","号":"hào","星":"xīng","期":"qī","点":"diǎn","分":"fēn","钟":"zhōng","现":"xiàn","里":"lǐ","上":"shàng","下":"xià","前":"qián","后":"hòu","中":"zhōng","国":"guó","北":"běi","京":"jīng","雨":"yǔ","和":"hé","呢":"ne","吗":"ma","吧":"ba","识":"shí","认":"rèn","做":"zuò","猫":"māo","狗":"gǒu","漂亮":"piào liang","汉语":"hàn yǔ","喜欢":"xǐ huan","谢谢":"xiè xie","认识":"rèn shi","医生":"yī shēng","老师":"lǎo shī","同学":"tóng xué","学生":"xué sheng","北京":"běi jīng","苹果":"píng guǒ","喝茶":"hē chá","回家":"huí jiā","看书":"kàn shū","说话":"shuō huà","写字":"xiě zì","天气":"tiān qì","现在":"xiàn zài","多少":"duō shao","再见":"zài jiàn","对不起":"duì bu qǐ","没关系":"méi guān xi","不客气":"bù kè qi","椅子":"yǐ zi","桌子":"zhuō zi","电视":"diàn shì","电脑":"diàn nǎo","电影":"diàn yǐng","女儿":"nǚ ér","朋友":"péng you","高兴":"gāo xìng","西瓜":"xī guā","工作":"gōng zuò","身体":"shēn tǐ","没去":"méi qù","明天":"míng tiān","美国":"měi guó","每天":"měi tiān","好看":"hǎo kàn"};
+
+function toRuby(str) {
+    if(!str) return "";
+    let res = ""; let i = 0;
+    while(i < str.length) {
+        let match = false;
+        for(let l=4; l>=2; l--) {
+            let sub = str.substr(i, l);
+            if(pyMap[sub]) {
+                let pys = pyMap[sub].split(' ');
+                for(let j=0; j<sub.length; j++) res += `<ruby>${sub[j]}<rt>${pys[j]||''}</rt></ruby>`;
+                i += l; match = true; break;
+            }
+        }
+        if(!match) {
+            let char = str[i];
+            res += pyMap[char] ? `<ruby>${char}<rt>${pyMap[char]}</rt></ruby>` : char;
+            i++;
+        }
+    }
+    return res;
+}
+
+const questions = [];
+let currentIdx = 0, partScores = [0,0,0,0,0], isMistakeMode = false;
+let mistakes = JSON.parse(localStorage.getItem('hsk1_r100_final_v12') || '[]');
+
+function buildData() {
+    const v = [{c:"医生",e:"👨‍⚕️"},{c:"苹果",e:"🍎"},{c:"喝茶",e:"☕"},{c:"看书",e:"📖"},{c:"小猫",e:"🐱"},{c:"电脑",e:"💻"},{c:"飞机",e:"✈️"},{c:"出租车",e:"🚕"},{c:"衣服",e:"👕"},{c:"下雨",e:"🌧️"},{c:"老师",e:"👩‍🏫"},{c:"学生",e:"🧒"},{c:"桌子",e:"🪑"},{c:"水果",e:"🍇"},{c:"椅子",e:"💺"},{c:"商店",e:"🏪"},{c:"饭店",e:"🍱"},{c:"学校",e:"🏫"},{c:"医院",e:"🏥"},{c:"电影",e:"🎬"}];
+    v.forEach((it, i) => { let isT = Math.random()>0.5; questions.push({id:i, type:1, text:it.c, visual:isT?it.e:v[(i+3)%20].e, answer:isT, title:"Part 1: Match"}); });
+    const p2s = ["她在喝茶。","他在看电影。","我想买苹果。","我会写汉字。","他在商店。","那是老师。","衣服很漂亮。","外面下雨了。","坐出租车。","在饭店吃饭。","那是电脑。","学校有人。","在桌子下。","想吃水果。","去北京。","他在看书。","医生在医院。","坐在椅子上。","坐飞机。","小猫睡觉。"];
+    const p2e = ["☕","🎬","🍎","✍️","🏪","👩‍🏫","👕","🌧️","🚕","🍱","💻","🏫","🪑","🍇","🏙️","📖","👨‍⚕️","💺","✈️","🐱"];
+    p2s.forEach((s,i)=>{ let opts=[p2e[i],"🏠","🥤","🚲"].sort(()=>Math.random()-0.5); questions.push({id:i+20, type:2, text:s, options:opts, answer:opts.indexOf(p2e[i]), title:"Part 2: Select"}); });
+    const p3q = ["谢谢你。","再见。","你叫什么？","你是哪国人？","会说汉语吗？","几点了？","多少钱？","你在哪儿？","天气怎么样？","他多大了？","想喝什么？","谁是老师？","这个字怎么读？","北京漂亮吗？","有猫吗？","在做什么？","认识他吗？","星期几？","在哪儿工作？","你好吗？"];
+    const p3a = ["不客气。","明天见。","我叫大卫。","我是美国人。","会说一点儿。","三点钟。","十块钱。","在学校。","太热了。","二十岁。","想喝水。","王老师。","不认识。","很漂亮。","有一只。","在睡觉。","不认识。","星期五。","在医院。","我很好。"];
+    p3q.forEach((q,i)=>{ let opts=[p3a[i],"没关系。","没去。","在上面。"].sort(()=>Math.random()-0.5); questions.push({id:i+40, type:3, text:q, options:opts, answer:opts.indexOf(p3a[i]), title:"Part 3: Pairing"}); });
+    const p4d = [["坐____去北京。","飞机"],["说____吗？","汉语"],["今天____好。","天气"],["请____茶。","喝"],["____钱？","多少"],["在____工作。","医院"],["桌子____。","上"],["____电视。","看"],["不____他。","认识"],["很高兴____你。","认识"],["去____买东西。","商店"],["____点钟？","几"],["我的____。","名字"],["下____了。","雨"],["他二十____。","岁"],["那是____？","谁"],["你在做____？","呢"],["她是我____。","女儿"],["衣服____。","漂亮"],["谢谢____。","你"]];
+    p4d.forEach((d,i)=>{ let opts=[d[1],"电脑","水果","椅子"].sort(()=>Math.random()-0.5); questions.push({id:i+60, type:4, text:d[0], options:opts, answer:opts.indexOf(d[1]), title:"Part 4: Blanks"}); });
+    
+    const p5d = [
+        {t:"他是我的好朋友，他在医院工作。他是一位医生，每天都很忙。我很喜欢他。", q:"我的朋友每天都很忙。", a:true},
+        {t:"我不喜欢喝茶，我喜欢喝冷水。今天天气很热，我想买一个大西瓜。", q:"他口渴了，想喝茶。", a:false},
+        {t:"北京今天下大雨了，天气很冷。我没去商店买衣服，我在家看电视。", q:"他今天没出门。", a:true},
+        {t:"那个商店的杯子很漂亮，一个杯子九块钱，我想买两个送给同学。", q:"他要花十八块钱。", a:true},
+        {t:"王老师有五个学生，现在他们在学校看书，没在外面写字。", q:"学生们不在学校。", a:false},
+        {t:"我家有一只小猫，它叫小花。它今年三岁了，非常漂亮，很听话。", q:"小花是猫的名字。", a:true},
+        {t:"下午四点，我和同学去饭店吃饭。我们想吃米饭和一些中国菜。", q:"他们在吃美国菜。", a:false},
+        {t:"今天星期日，我没去工作。下午我去学校看女儿，她在那儿读汉语书。", q:"他女儿在学习。", a:true},
+        {t:"这个电影叫《你好》，很好看。我看过很多次，我的朋友也说很好看。", q:"他第一次看这部电影。", a:false},
+        {t:"我会说一点儿汉语，但不会写汉字。明天我想去学校学习怎么写字。", q:"他想学习写汉字。", a:true},
+        {t:"桌子上有一个电脑和几本书，那是大卫的。他在北京学习汉语，是个好学生。", q:"桌子是大卫的。", a:false},
+        {t:"我没坐出租车，我明天坐飞机去北京。北京是一个大城市，那儿有很多好商店。", q:"他现在在北京。", a:false},
+        {t:"她是我的汉语老师，她今年三十岁了。她去过很多国家，认识很多学生。", q:"老师认识很多人。", a:true},
+        {t:"昨天是星期五，明天是星期日。今天我有时间，我想去电影院看电影。", q:"昨天他去看电影了。", a:false},
+        {t:"这个苹果很大，也很红。我很喜欢吃水果，医生说多吃水果对身体好。", q:"吃水果对他好。", a:true},
+        {t:"他在房间里看书，没出来喝茶。他想在下个星期前读完这本厚厚的小说。", q:"他在外面喝茶。", a:false},
+        {t:"那是王先生的衣服，是在北京买的。那件衣服很贵，但是他非常喜欢。", q:"衣服很便宜。", a:false},
+        {t:"我家在北京饭店后面，那儿有很多小商店。每天有很多学生在那儿买水。", q:"学生在商店买东西。", a:true},
+        {t:"请坐在椅子上，喝杯热水。天气冷了，你要多穿一点儿衣服，别生病。", q:"现在天气很热。", a:false},
+        {t:"他在打电话，他在和妈妈说话。他说明天回京，想吃妈妈做的米饭。", q:"他在和妈妈吃饭。", a:false}
+    ];
+    p5d.forEach((d,i)=>questions.push({id:i+80, type:5, text:d.t, sub:d.q, answer:d.a, title:"Part 5: Logic"}));
+}
+
+function startApp(idx) { currentIdx=idx; isMistakeMode=false; document.getElementById('cover-page').style.transform='translateY(-100%)'; document.getElementById('app').style.display='flex'; renderQuestion(); }
+
+function renderQuestion() {
+    const q = isMistakeMode?mistakes[currentIdx]:questions[currentIdx];
+    document.getElementById('q-info').innerText = `${q.title} - ${isMistakeMode?(currentIdx+1)+'/'+mistakes.length:(currentIdx%20+1)+'/20'}`;
+    document.getElementById('progress-fill').style.width = isMistakeMode?`${(currentIdx+1)/mistakes.length*100}%`:`${(currentIdx%20+1)/20*100}%`;
+    document.getElementById('reading-text').innerHTML = toRuby(q.text);
+    document.getElementById('sub-text').innerHTML = q.sub?toRuby(q.sub):"";
+    const grid = document.getElementById('options-grid'); const visual = document.getElementById('visual-content');
+    grid.innerHTML = ''; visual.style.display = (q.type===1)?'block':'none';
+    if(q.type===1 || q.type===5) {
+        if(q.type===1) visual.innerText = q.visual;
+        grid.innerHTML = `<div class="opt-item" onclick="handleAns(true)">${toRuby('对')} True</div><div class="opt-item" onclick="handleAns(false)">${toRuby('错')} False</div>`;
+    } else {
+        q.options.forEach((o,i)=>grid.innerHTML += `<div class="opt-item ${q.type===2?'opt-img':''}" onclick="handleAns(${i})">${q.type===2?o:toRuby(o)}</div>`);
+    }
+}
+
+function handleAns(c) {
+    const q = isMistakeMode?mistakes[currentIdx]:questions[currentIdx];
+    const isR = c===q.answer;
+    const fb = document.getElementById('feedback-pop'); fb.innerText = isR?"✔️":"❌"; fb.style.color = isR?"#4cd137":"#ff4757"; fb.style.display='block';
+    if(isR) { if(isMistakeMode) mistakes.splice(currentIdx, 1); else partScores[Math.floor(q.id/20)]++; }
+    else if(!isMistakeMode && !mistakes.some(m=>m.id===q.id)) mistakes.push(q);
+    localStorage.setItem('hsk1_r100_final_v12', JSON.stringify(mistakes));
+    setTimeout(()=>{ fb.style.display='none'; if(isMistakeMode){ if(mistakes.length===0) showSum(true); else {if(currentIdx>=mistakes.length) currentIdx=0; renderQuestion();} } else { if((currentIdx+1)%20===0) showSum(false); else {currentIdx++; renderQuestion();} } }, 800);
+}
+
+function showSum(m) { document.getElementById('summary-screen').style.display='flex'; document.getElementById('final-score').innerText = m?100:partScores[Math.floor(currentIdx/20)]*5; }
+function toggleOverlay(id, s) { document.getElementById(id).style.display = s?'block':'none'; if(s&&id==='list-view') renderList(); if(s&&id==='mistake-view') renderMistakeList(); }
+
+function renderList() { 
+    const content = document.getElementById('list-content');
+    content.innerHTML = questions.map((q,i)=>`
+        <div class="list-item" onclick="jumpTo(${i}, false)">
+            <small style="color:var(--gold)">Q${i+1} [${q.title}]</small><br>
+            ${toRuby(q.text.slice(0,30))}${q.text.length>30?'...':''}
+        </div>`).join(''); 
+}
+
+function renderMistakeList() { 
+    const content = document.getElementById('mistake-content');
+    content.innerHTML = mistakes.length?mistakes.map((q,i)=>`
+        <div class="list-item" onclick="jumpTo(${i}, true)">
+            <small style="color:var(--pinyin-red)">Mistake ${i+1}</small><br>
+            ${toRuby(q.text.slice(0,30))}...
+        </div>`).join(''):"<p style='text-align:center;'>Empty! Keep it up!</p>"; 
+}
+
+function jumpTo(i,m) { currentIdx=i; isMistakeMode=m; toggleOverlay(m?'mistake-view':'list-view',false); document.getElementById('q-mode').style.display=m?'inline-block':'none'; document.getElementById('cover-page').style.transform='translateY(-100%)'; document.getElementById('app').style.display='flex'; renderQuestion(); }
+function exitToCover() { document.getElementById('cover-page').style.transform='translateY(0)'; }
+window.onload = buildData;
+</script>
+</body>
+</html>
